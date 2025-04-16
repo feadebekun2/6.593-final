@@ -37,4 +37,4 @@ problem:
     S: 3   # filter width
     P: 56  # ofmap height
     Q: 56  # ofmap width
-    N: 1   # batch size
+    N: 64   # batch size
