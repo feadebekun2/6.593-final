@@ -148,6 +148,11 @@ def make_tp_workload(configs):
 dp_configs = make_dp_workload(base_configs)
 tp_configs = make_tp_workload(base_configs)
 
+
+#We try and model resnet_18 in timeloop. 
+#In layer_shapes, there are shapes of each convolutional filter involved in resnet. 
+#TO DO: Add the fully connected layer, as well as a way to measure data reuse between layers (via skip connections)
+#Maybe add LoopTree for this? 
 def resnet_18_timeloop_loop():
     layers = {
         "l1_conv1": 1, 
@@ -161,6 +166,17 @@ def resnet_18_timeloop_loop():
         "l29-l33_conv5_stride1": 5
     }
 
+    num_macs_per_layer = {
+        "l1_conv1": 3*64*7*7*112*112*64, 
+        "l2_conv2_stride2": ,
+        "l3-l7_conv2_stride1": 5,
+        "l8_conv3_stride2": 1,
+        "l9-l15_conv3_stride1": 7,
+        "l16_conv4_stride2": 1,
+        "l17-l27_conv4_stride1": 11,
+        "l28_conv5_stride2": 1,
+        "l29-l33_conv5_stride1": 5
+    }
     config_types = {
         "base": base_configs,
         "dp": dp_configs,
@@ -211,6 +227,6 @@ def resnet_18_timeloop_loop():
         print(f"{config_type.upper()} RESULTS:")
         print("Energy:", results[config_type]["energy"])
         print("Cycles:", results[config_type]["cycles"])
-    return
+    return results
 
 
