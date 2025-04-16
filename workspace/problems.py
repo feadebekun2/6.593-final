@@ -166,17 +166,6 @@ def resnet_18_timeloop_loop():
         "l29-l33_conv5_stride1": 5
     }
 
-    num_macs_per_layer = {
-        "l1_conv1": 3*64*7*7*112*112*64, 
-        "l2_conv2_stride2": ,
-        "l3-l7_conv2_stride1": 5,
-        "l8_conv3_stride2": 1,
-        "l9-l15_conv3_stride1": 7,
-        "l16_conv4_stride2": 1,
-        "l17-l27_conv4_stride1": 11,
-        "l28_conv5_stride2": 1,
-        "l29-l33_conv5_stride1": 5
-    }
     config_types = {
         "base": base_configs,
         "dp": dp_configs,
