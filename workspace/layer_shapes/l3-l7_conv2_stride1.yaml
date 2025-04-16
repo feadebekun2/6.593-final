@@ -35,10 +35,10 @@ problem:
       read_write: True
 
   instance:
-    C: 4  # inchn
-    M: 8  # outchn
-    R: 5   # filter height
-    S: 5   # filter width
-    P: 28  # ofmap height
-    Q: 28  # ofmap width
-    N: 50   # batch size
+    C: 64  # inchn
+    M: 64  # outchn
+    R: 3   # filter height
+    S: 3   # filter width
+    P: 56  # ofmap height
+    Q: 56  # ofmap width
+    N: 64   # batch size
