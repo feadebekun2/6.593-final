@@ -1,6 +1,8 @@
 from collections import defaultdict
 from enum import Enum
 from typing import List
+import json
+import os
 from architectures.architecture_constants import Architecture, GPUMemoryScale, RackSize
 
 class ArchitectureResults:
@@ -12,6 +14,33 @@ class ArchitectureResults:
             "tot_hops": None,
             "hop_energy": None,
         })
+
+    def save_to_json(self, filename: str = "results.json", dir_path: str = "persisted_results"):
+        os.makedirs(dir_path, exist_ok=True)
+        full_path = os.path.join(dir_path, filename)
+
+        serializable_data = {
+            str((arch.name, scale.name, rack.name)): metrics
+            for (arch, scale, rack), metrics in self.data.items()
+        }
+        with open(full_path, 'w') as f:
+            json.dump(serializable_data, f, indent=2)
+
+    def load_from_json(self, filename: str = "results.json", dir_path: str = "persisted_results"):
+        full_path = os.path.join(dir_path, filename)
+
+        with open(full_path, 'r') as f:
+            loaded = json.load(f)
+
+        self.data.clear()
+        for key_str, metrics in loaded.items():
+            arch_name, scale_name, rack_name = eval(key_str)
+            key = (
+                Architecture[arch_name],
+                GPUMemoryScale[scale_name],
+                RackSize[rack_name],
+            )
+            self.data[key] = metrics
 
     def add(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize,
             cycles: List[float], energy: List[float],

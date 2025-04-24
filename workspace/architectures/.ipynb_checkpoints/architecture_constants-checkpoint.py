@@ -6,6 +6,26 @@ class Architecture(Enum):
     Data_Parallel = 'Data_Parallel'
     Tensor_Parallel = 'Tensor_Parallel'    
 
+class GPUMemoryScale(Enum):
+    SMALL = 'designs/system/small_arch.yaml'
+    MEDIUM = 'designs/system/medium_arch.yaml'
+    LARGE = 'designs/system/large_arch.yaml'
+    X_LARGE = 'designs/system/xlarge_arch.yaml'
+
+    @property
+    def size_label(self) -> str:
+        return {
+            "SMALL": "4MB",
+            "MEDIUM": "16MB",
+            "LARGE": "64MB",
+            "X_LARGE": "1024MB",
+        }[self.name]
+
+class RackSize(Enum):
+    SMALL = 2
+    MEDIUM = 4
+    LARGE = 8
+
 ARCH_CONFIG = {'pe_meshX': 4, 'pe_meshY': 4}
 
 # Base configs keep everything in DRAM and have global_buffer_factor set to 1

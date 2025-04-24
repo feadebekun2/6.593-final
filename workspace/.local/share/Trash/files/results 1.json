@@ -1,0 +1,134 @@
+{
+  "('Base', 'SMALL', 'SMALL')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      967691.51
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'MEDIUM', 'SMALL')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      1806855.31
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'LARGE', 'SMALL')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      3452882.15
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'X_LARGE', 'SMALL')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      18189443.42
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'SMALL', 'MEDIUM')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      967691.51
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'MEDIUM', 'MEDIUM')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      1806855.31
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'LARGE', 'MEDIUM')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      3452882.15
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'X_LARGE', 'MEDIUM')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      18189443.42
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'SMALL', 'LARGE')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      967691.51
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'MEDIUM', 'LARGE')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      1806855.31
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'LARGE', 'LARGE')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      3452882.15
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  },
+  "('Base', 'X_LARGE', 'LARGE')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      18189443.42
+    ],
+    "tp": 7.552892928,
+    "tot_hops": 0,
+    "hop_energy": 0.0
+  }
+}

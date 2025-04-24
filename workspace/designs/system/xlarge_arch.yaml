@@ -28,7 +28,7 @@ architecture:
     class: SRAM
     attributes:
       width: 128
-      depth: 8192 * 8192
+      depth: 8192 * 8192 # 1024 MB
       datawidth: datawidth
       n_banks: 1
       n_rdwr_ports: 2

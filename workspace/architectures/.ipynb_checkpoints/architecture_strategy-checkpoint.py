@@ -9,15 +9,14 @@ class WorkloadStrategy:
         self.num_gpus = num_gpus
         self.debug = debug
 
-        match self.strategy:
-            case Architecture.Base:
-                self.workload = self.__build_base_architecture()
-            case Architecture.Data_Parallel:
-                self.workload = self.__built_dp_architecture()
-            case Architecture.Tensor_Parallel:
-                self.workload = self.__build_tp_architecture()
-            case _:
-                raise ValueError(f"Unsupported Architecture: {strategy}")
+        if self.strategy == Architecture.Base:
+            self.workload = self.__build_base_architecture()
+        elif self.strategy == Architecture.Data_Parallel:
+            self.workload = self.__built_dp_architecture()
+        elif self.strategy == Architecture.Tensor_Parallel:
+            self.workload = self.__build_tp_architecture()
+        else:
+            raise ValueError(f"Unsupported Architecture: {strategy}")
 
         self.derivedMetricsEvaluator = DerivedMetricsEvaluator(strategy, gpu_architecture, num_gpus, self.workload)
 
@@ -47,14 +46,23 @@ class WorkloadStrategy:
     def run_workload(self):
         results = {"energy": [], "cycles": [], "tp": 0, "tot_hops": 0, "hop_energy": 0}
 
+        flat_index = 0
         for i, (filename, count) in enumerate(resnet_18_layers.items()):
             config = self.workload[i]
 
-            for _ in range(count):  # Repeat for repeated layers    
+            for _ in range(count):  # Repeat for repeated layers
+                print(f"Running layer {flat_index + 1}: {filename}")
+                flat_index += 1
+                # Skip computation on configs that already had errors
+                if results["tp"] == -1:
+                    continue
                 # If debug is enabled, just add -1 to run through each config
                 if self.debug:
                     results["energy"].append(-1)
                     results["cycles"].append(-1)
+                    results["tp"] = -1
+                    results["tot_hops"] = -1
+                    results["hop_energy"] = -1
     
                 # If debug is disabled, run the actual config
                 else:
@@ -75,11 +83,7 @@ class WorkloadStrategy:
         
                         results["energy"].append(energy)
                         results["cycles"].append(cycles)
-
-                        results["tp"].append(-1)
-                        results["tot_hops"].append(-1)
-                        results["hop_energy"].append(-1)
-
+    
         
                     except Exception as e:
                         print(f"Error running layer {filename}: {e}")

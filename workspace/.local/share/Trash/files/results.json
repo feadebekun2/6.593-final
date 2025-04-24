@@ -1,0 +1,57 @@
+{
+  "('Base', 'SMALL', 'SMALL')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      967691.51
+    ],
+    "tp": 0,
+    "tot_hops": 0,
+    "hop_energy": 0
+  },
+  "('Base', 'MEDIUM', 'SMALL')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      1806855.31
+    ],
+    "tp": 0,
+    "tot_hops": 0,
+    "hop_energy": 0
+  },
+  "('Base', 'LARGE', 'SMALL')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      3452882.15
+    ],
+    "tp": 0,
+    "tot_hops": 0,
+    "hop_energy": 0
+  },
+  "('Base', 'X_LARGE', 'SMALL')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      18189443.42
+    ],
+    "tp": 0,
+    "tot_hops": 0,
+    "hop_energy": 0
+  },
+  "('Base', 'SMALL', 'MEDIUM')": {
+    "cycles": [
+      7552892928
+    ],
+    "energy": [
+      967691.51
+    ],
+    "tp": 0,
+    "tot_hops": 0,
+    "hop_energy": 0
+  }
+}

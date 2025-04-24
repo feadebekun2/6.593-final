@@ -12,22 +12,25 @@ class DerivedMetricsEvaluator:
         self.workload = workload
 
     def derive_throughput(self, cycles):
+        strategy_name = self.strategy.name
+        
         # TODO: We need to account for the cost of a hop in terms of cycles
-        if self.strategy == Architecture.Base:
-            # I think this should remain, but other ones have hops that need to be accounted for
+        if strategy_name == "Base":
             return cycles / FREQUENCY
-        elif self.strategy == Architecture.Data_Parallel:
+        elif strategy_name == "Data_Parallel":
             return cycles / FREQUENCY
-        elif self.strategy == Architecture.Tensor_Parallel:
+        elif strategy_name == "Tensor_Parallel":
             return cycles / FREQUENCY
         else:
             raise ValueError(f"Unsupported Architecture: {self.strategy}")
 
     def derive_total_hops(self):
-        if self.strategy == Architecture.Base:
+        strategy_name = self.strategy.name
+        
+        if strategy_name == "Base":
             # No hops in the base architecture since all work is on 1 GPU
             return 0
-        elif self.strategy == Architecture.Data_Parallel:
+        elif strategy_name == "Data_Parallel":
             # Only hop is at the very end so just use layer_shapes[0]
             C = layer_shapes[0]["C"]
             M = layer_shapes[0]["M"]
@@ -36,7 +39,7 @@ class DerivedMetricsEvaluator:
             pe_N = self.workload.get('PE_spatial_factor_N', 1)
 
             return M * C * R * S * (pe_N - 1)
-        elif self.strategy == Architecture.Tensor_Parallel:
+        elif strategy_name == "Tensor_Parallel":
             # TODO: Need to aggregate over each layer (but might need to multiply by 2 for forward and backward pass?)
             tot_hops = 0
             for layer in layer_shapes:
