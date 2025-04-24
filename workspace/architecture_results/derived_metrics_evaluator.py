@@ -36,7 +36,7 @@ class DerivedMetricsEvaluator:
             M = layer_shapes[0]["M"]
             R = layer_shapes[0]["R"]
             S = layer_shapes[0]["S"]
-            pe_N = self.workload.get('PE_spatial_factor_N', 1)
+            pe_N = self.workload[0].get('PE_spatial_factor_N', 1)
 
             return M * C * R * S * (pe_N - 1)
         elif strategy_name == "Tensor_Parallel":
@@ -47,7 +47,7 @@ class DerivedMetricsEvaluator:
                 M = layer["M"]
                 R = layer["R"]
                 S = layer["S"]
-                pe_M = self.workload.get('PE_spatial_factor_M', 1)
+                pe_M = self.workload[0].get('PE_spatial_factor_M', 1)
 
                 tot_hops += M * C * R * S * (pe_M - 1)
             return tot_hops

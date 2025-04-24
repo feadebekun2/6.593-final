@@ -55,7 +55,13 @@ class WorkloadStrategy:
                 flat_index += 1
                 # Skip computation on configs that already had errors
                 if results["tp"] == -1:
+                    results["energy"].append(-1)
+                    results["cycles"].append(-1)
+                    results["tp"] = -1
+                    results["tot_hops"] = -1
+                    results["hop_energy"] = -1
                     continue
+
                 # If debug is enabled, just add -1 to run through each config
                 if self.debug:
                     results["energy"].append(-1)
