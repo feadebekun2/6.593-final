@@ -5,11 +5,23 @@ from architectures.architecture_constants import Architecture, GPUMemoryScale, R
 
 class ArchitectureResults:
     def __init__(self):
-        self.data = defaultdict(lambda: {"cycles": [], "energy": []})
+        self.data = defaultdict(lambda: {
+            "cycles": [],
+            "energy": [],
+            "tp": None,
+            "tot_hops": None,
+            "hop_energy": None,
+        })
 
-    def add(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize, cycles: List[float], energy: List[float]):
-        self.data[(arch, scale, rack)]["cycles"] = cycles
-        self.data[(arch, scale, rack)]["energy"] = energy
+    def add(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize,
+            cycles: List[float], energy: List[float],
+            tp: float, tot_hops: float, hop_energy: float):
+        key = (arch, scale, rack)
+        self.data[key]["cycles"] = cycles
+        self.data[key]["energy"] = energy
+        self.data[key]["tp"] = tp
+        self.data[key]["tot_hops"] = tot_hops
+        self.data[key]["hop_energy"] = hop_energy
 
     def get_cycles(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> List[float]:
         return self.data[(arch, scale, rack)]["cycles"]
@@ -17,7 +29,14 @@ class ArchitectureResults:
     def get_energy(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> List[float]:
         return self.data[(arch, scale, rack)]["energy"]
 
+    def get_tp(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
+        return self.data[(arch, scale, rack)]["tp"]
+
+    def get_total_hops(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
+        return self.data[(arch, scale, rack)]["tot_hops"]
+
+    def get_hop_energy(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
+        return self.data[(arch, scale, rack)]["hop_energy"]
+
     def all_keys(self):
         return self.data.keys()
-
-    
