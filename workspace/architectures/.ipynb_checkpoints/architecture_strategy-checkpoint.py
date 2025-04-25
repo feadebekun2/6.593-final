@@ -82,6 +82,8 @@ class WorkloadStrategy:
             
                         with open('./output_dir/timeloop-model.stats.txt', 'r') as f:
                             stats = f.read()
+
+                        print(stats)
             
                         lines = stats.split('\n')
                         energy = float([l for l in lines if 'Energy:' in l][0].split(' ', 2)[1])

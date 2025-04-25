@@ -2,7 +2,10 @@ from architectures.architecture_constants import Architecture, GPUMemoryScale, b
 from loaders import *
 
 FREQUENCY = 1e9 # TODO: Find a better value (rn using 1GHz)
-ENERGY_PER_HOP = 0.02 # TODO: Get both units of energy and also the value of a DRAM access to use as the estimated value
+
+# From Timeloop output for DRAM
+# Energy (per-scalar-access)               : 128.00 pJ
+ENERGY_PER_HOP = 128 * 1e-6
 
 class DerivedMetricsEvaluator:
     def __init__(self, strategy: Architecture, gpu_architecture: GPUMemoryScale, num_gpus, workload):

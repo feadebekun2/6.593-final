@@ -38,7 +38,7 @@ class TimeLoopExperimentController:
 
         if os.path.exists(results_path):
             print("Loading in existing json file")
-            self.results.load_from_json()
+            # self.results.load_from_json()
         else:
             print("No json file found")
         
@@ -48,9 +48,9 @@ class TimeLoopExperimentController:
                     key = (arch, scale, rack)
 
                     # Skip configurations already computed.
-                    if key in self.results.data:
-                        print(f"Skipping {arch.name}, {scale.name}, {rack.name}.")
-                        continue
+                    # if key in self.results.data:
+                    #     print(f"Skipping {arch.name}, {scale.name}, {rack.name}.")
+                    #     continue
 
                     architecture = WorkloadStrategy(arch, scale, rack.value, self.debug)
                     results = architecture.run_workload()
@@ -69,7 +69,7 @@ class TimeLoopExperimentController:
                     )
 
                     # Ensure we save to persistent file to skip computations in the future
-                    self.results.save_to_json()
+                    # self.results.save_to_json()
 
     """
     Plots the results stored in self.results

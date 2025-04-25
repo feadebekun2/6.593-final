@@ -29,16 +29,16 @@ architecture:
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - read
+              - write
               - leak
               - update
-              - write
-              - read
             enabled: true
           - name: global_buffer[1..1]
             class: SRAM
             attributes:
                 width: 128
-                depth: 67108864
+                depth: 262144
                 datawidth: 16
                 n_banks: 1
                 n_rdwr_ports: 2
@@ -54,10 +54,10 @@ architecture:
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - read
+              - write
               - leak
               - update
-              - write
-              - read
             enabled: true
           - name: inter_PE_spatial[1..1]
             class: dummy_storage
@@ -97,10 +97,10 @@ architecture:
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - read
+              - write
               - leak
               - update
-              - write
-              - read
             enabled: true
           - name: weight_reg[1..16]
             class: reg_storage
@@ -121,10 +121,10 @@ architecture:
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - read
+              - write
               - leak
               - update
-              - write
-              - read
             enabled: true
           - name: input_activation_reg[1..16]
             class: reg_storage
@@ -145,10 +145,10 @@ architecture:
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - read
+              - write
               - leak
               - update
-              - write
-              - read
             enabled: true
           - name: output_activation_reg[1..16]
             class: reg_storage
@@ -169,10 +169,10 @@ architecture:
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - read
+              - write
               - leak
               - update
-              - write
-              - read
             enabled: true
           - name: mac[1..16]
             class: mac_compute
@@ -192,15 +192,15 @@ architecture_constraints:
     targets:
       - target: DRAM
         type: temporal
-        factors: P=1,Q=1,R=1,S=1,N=64,M=8,C=128
+        factors: P=1,Q=1,R=1,S=1,N=64,M=64,C=64
         permutation: SRQPCMN
       - target: global_buffer
         type: temporal
-        factors: P=1,Q=1,R=1,S=1,N=1,M=4,C=1
+        factors: P=1,Q=1,R=1,S=1,N=1,M=1,C=1
         permutation: SRQPCMN
       - type: spatial
         target: inter_PE_spatial
-        factors: P=1,Q=1,R=1,S=1,N=1,M=4,C=1
+        factors: P=1,Q=1,R=1,S=1,N=1,M=1,C=1
         permutation: CMRSPQN
         split: 1
       - factors: C=1,M=1,R=1,S=1,N=1,P=1,Q=1
@@ -260,7 +260,7 @@ architecture_constraints:
 problem:
     version: '0.4'
     shape:
-        name: "Conv3"
+        name: "CNN_Layer"
         dimensions:
           - C
           - M
@@ -307,12 +307,12 @@ problem:
               -   -   - P
             read_write: true
     instance:
-        C: 128
-        M: 128
+        C: 64
+        M: 64
         R: 3
         S: 3
-        P: 28
-        Q: 28
+        P: 56
+        Q: 56
         N: 64
         densities: {}
 compound_components:
