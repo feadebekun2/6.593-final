@@ -4,15 +4,18 @@ from typing import List
 import json
 import os
 from architectures.architecture_constants import Architecture, GPUMemoryScale, RackSize
+from results_constants import ResultKeys
 
 class ArchitectureResults:
     def __init__(self):
         self.data = defaultdict(lambda: {
-            "cycles": [],
-            "energy": [],
-            "tp": None,
-            "tot_hops": None,
-            "hop_energy": None,
+            ResultKeys.CYCLES: [],
+            ResultKeys.ENERGY: [],
+            ResultKeys.THROUGHPUT: None,
+            ResultKeys.STAR_HOPS: None,
+            ResultKeys.RING_HOPS: None,
+            ResultKeys.STAR_HOP_ENERGY: None,
+            ResultKeys.RING_HOP_ENERGY: None,
         })
 
     def save_to_json(self, filename: str = "results.json", dir_path: str = "persisted_results"):
@@ -44,28 +47,37 @@ class ArchitectureResults:
 
     def add(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize,
             cycles: List[float], energy: List[float],
-            tp: float, tot_hops: float, hop_energy: float):
+            tp: float, star_hops: float, ring_hops: float,
+            star_hop_energy: float, ring_hop_energy: float):
         key = (arch, scale, rack)
-        self.data[key]["cycles"] = cycles
-        self.data[key]["energy"] = energy
-        self.data[key]["tp"] = tp
-        self.data[key]["tot_hops"] = tot_hops
-        self.data[key]["hop_energy"] = hop_energy
+        self.data[key][ResultKeys.CYCLES] = cycles
+        self.data[key][ResultKeys.ENERGY] = energy
+        self.data[key][ResultKeys.THROUGHPUT] = tp
+        self.data[key][ResultKeys.STAR_HOPS] = star_hops
+        self.data[key][ResultKeys.RING_HOPS] = ring_hops
+        self.data[key][ResultKeys.STAR_HOP_ENERGY] = star_hop_energy
+        self.data[key][ResultKeys.RING_HOP_ENERGY] = ring_hop_energy
 
-    def get_cycles(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> List[float]:
-        return self.data[(arch, scale, rack)]["cycles"]
+    def get_cycles(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
+        return self.data[(arch, scale, rack)][ResultKeys.CYCLES]
 
-    def get_energy(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> List[float]:
-        return self.data[(arch, scale, rack)]["energy"]
+    def get_energy(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
+        return self.data[(arch, scale, rack)][ResultKeys.ENERGY]
 
     def get_tp(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
-        return self.data[(arch, scale, rack)]["tp"]
+        return self.data[(arch, scale, rack)][ResultKeys.THROUGHPUT]
 
-    def get_total_hops(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
-        return self.data[(arch, scale, rack)]["tot_hops"]
+    def get_star_hops(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
+        return self.data[(arch, scale, rack)][ResultKeys.STAR_HOPS]
 
-    def get_hop_energy(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
-        return self.data[(arch, scale, rack)]["hop_energy"]
+    def get_ring_hops(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
+        return self.data[(arch, scale, rack)][ResultKeys.RING_HOPS]
+
+    def get_star_hop_energy(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
+        return self.data[(arch, scale, rack)][ResultKeys.STAR_HOP_ENERGY]
+
+    def get_ring_hop_energy(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
+        return self.data[(arch, scale, rack)][ResultKeys.RING_HOP_ENERGY]
 
     def all_keys(self):
         return self.data.keys()

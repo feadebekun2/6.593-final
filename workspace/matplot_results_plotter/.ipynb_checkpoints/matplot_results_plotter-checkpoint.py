@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from architectures.architecture_constants import Architecture, GPUMemoryScale, RackSize, base_config, resnet_18_layers
+from results_constants import ResultKeys
 
 class MatplotResultsPlotter:
     def __init__(self):
@@ -15,11 +16,13 @@ class MatplotResultsPlotter:
 
     def __get_ylabel(self, metric_key: str) -> str:
         units = {
-            "cycles": " (cycles)",
-            "energy": " (J)", # TODO 
-            "tp": " (throughput, GOPS)",
-            "tot_hops": " (hops)",
-            "hop_energy": " (pJ)"
+            ResultKeys.CYCLES: " (cycles)",
+            ResultKeys.ENERGY: " (pJ)",
+            ResultKeys.THROUGHPUT: " (throughput, GOPS)",
+            ResultKeys.STAR_HOPS: " (hops)",
+            ResultKeys.RING_HOPS: " (hops)",
+            ResultKeys.STAR_HOP_ENERGY: " (pJ)",
+            ResultKeys.RING_HOP_ENERGY: " (pJ)",
         }
         return metric_key + units.get(metric_key, "")
 

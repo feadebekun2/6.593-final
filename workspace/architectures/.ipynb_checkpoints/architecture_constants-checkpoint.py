@@ -7,24 +7,24 @@ class Architecture(Enum):
     Tensor_Parallel = 'Tensor_Parallel'    
 
 class GPUMemoryScale(Enum):
-    SMALL = 'designs/system/small_arch.yaml'
-    MEDIUM = 'designs/system/medium_arch.yaml'
-    LARGE = 'designs/system/large_arch.yaml'
-    X_LARGE = 'designs/system/xlarge_arch.yaml'
+    MEMORY_4MB = 'designs/system/small_arch.yaml'
+    MEMORY_16MB = 'designs/system/medium_arch.yaml'
+    MEMORY_64MB = 'designs/system/large_arch.yaml'
+    MEMORY_1024MB = 'designs/system/xlarge_arch.yaml'
 
     @property
     def size_label(self) -> str:
         return {
-            "SMALL": "4MB",
-            "MEDIUM": "16MB",
-            "LARGE": "64MB",
-            "X_LARGE": "1024MB",
+            "MEMORY_4MB": "4MB",
+            "MEMORY_16MB": "16MB",
+            "MEMORY_64MB": "64MB",
+            "MEMORY_1024MB": "1024MB",
         }[self.name]
 
 class RackSize(Enum):
-    SMALL = 2
-    MEDIUM = 4
-    LARGE = 8
+    RACK_2 = 2
+    RACK_4 = 4
+    RACK_8 = 8
 
 ARCH_CONFIG = {'pe_meshX': 4, 'pe_meshY': 4}
 

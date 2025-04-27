@@ -1,6 +1,7 @@
 from architectures.architecture_constants import Architecture, GPUMemoryScale, base_config, resnet_18_layers
 from architecture_results.derived_metrics_evaluator import DerivedMetricsEvaluator
 from loaders import *
+from results_constants import ResultKeys
 
 class WorkloadStrategy:
     def __init__(self, strategy: Architecture, gpu_architecture: GPUMemoryScale, num_gpus, debug):
@@ -44,7 +45,15 @@ class WorkloadStrategy:
         return tp_configs
 
     def run_workload(self):
-        results = {"energy": [], "cycles": [], "tp": 0, "tot_hops": 0, "hop_energy": 0}
+        results = {
+            ResultKeys.ENERGY: [],
+            ResultKeys.CYCLES: [],
+            ResultKeys.THROUGHPUT: 0,
+            ResultKeys.STAR_HOPS: 0,
+            ResultKeys.RING_HOPS: 0,
+            ResultKeys.STAR_HOP_ENERGY: 0,
+            ResultKeys.RING_HOP_ENERGY: 0,
+        }
 
         flat_index = 0
         for i, (filename, count) in enumerate(resnet_18_layers.items()):
@@ -54,21 +63,17 @@ class WorkloadStrategy:
                 print(f"Running layer {flat_index + 1}: {filename}")
                 flat_index += 1
                 # Skip computation on configs that already had errors
-                if results["tp"] == -1:
-                    results["energy"].append(-1)
-                    results["cycles"].append(-1)
-                    results["tp"] = -1
-                    results["tot_hops"] = -1
-                    results["hop_energy"] = -1
+                if results[ResultKeys.THROUGHPUT] == -1:
+                    results[ResultKeys.ENERGY].append(-1)
+                    results[ResultKeys.CYCLES].append(-1)
+                    results[ResultKeys.THROUGHPUT] = -1
                     continue
 
                 # If debug is enabled, just add -1 to run through each config
                 if self.debug:
-                    results["energy"].append(-1)
-                    results["cycles"].append(-1)
-                    results["tp"] = -1
-                    results["tot_hops"] = -1
-                    results["hop_energy"] = -1
+                    results[ResultKeys.ENERGY].append(-1)
+                    results[ResultKeys.CYCLES].append(-1)
+                    results[ResultKeys.THROUGHPUT] = -1
     
                 # If debug is disabled, run the actual config
                 else:
@@ -82,29 +87,32 @@ class WorkloadStrategy:
             
                         with open('./output_dir/timeloop-model.stats.txt', 'r') as f:
                             stats = f.read()
-
-                        print(stats)
             
                         lines = stats.split('\n')
                         energy = float([l for l in lines if 'Energy:' in l][0].split(' ', 2)[1])
                         cycles = int([l for l in lines if 'Cycles:' in l][0].split(' ', 1)[1])
         
-                        results["energy"].append(energy)
-                        results["cycles"].append(cycles)
+                        results[ResultKeys.ENERGY] = energy
+                        results[ResultKeys.CYCLES] = cycles
     
         
                     except Exception as e:
                         print(f"Error running layer {filename}: {e}")
-                        results["energy"].append(-1)
-                        results["cycles"].append(-1)
-                        results["tp"] = -1
-                        results["tot_hops"] = -1
-                        results["hop_energy"] = -1
+                        results[ResultKeys.ENERGY].append(-1)
+                        results[ResultKeys.CYCLES].append(-1)
+                        results[ResultKeys.THROUGHPUT] = -1
 
-        if results["tp"] != -1:
-            results["tp"] = self.derivedMetricsEvaluator.derive_throughput(sum(results["cycles"]))
-            results["tot_hops"] = self.derivedMetricsEvaluator.derive_total_hops()
-            results["hop_energy"] = self.derivedMetricsEvaluator.derive_total_hop_energy()
+        if results[ResultKeys.THROUGHPUT] != -1:
+            results[ResultKeys.THROUGHPUT] = self.derivedMetricsEvaluator.derive_throughput(results[ResultKeys.CYCLES])
+        
+        # These are independent of failures
+        star_hops, star_hop_energy = self.derivedMetricsEvaluator.derive_total_star_hops_and_energy()
+        ring_hops, ring_hop_energy = self.derivedMetricsEvaluator.derive_total_ring_hops_and_energy()
+        
+        results[ResultKeys.STAR_HOPS] = star_hops
+        results[ResultKeys.RING_HOPS] = ring_hops
+        results[ResultKeys.STAR_HOP_ENERGY] = star_hop_energy
+        results[ResultKeys.RING_HOP_ENERGY] = ring_hop_energy
 
         return results
         
