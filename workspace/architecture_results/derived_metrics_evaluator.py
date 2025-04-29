@@ -1,11 +1,20 @@
 from architectures.architecture_constants import Architecture, GPUMemoryScale, base_config, resnet_18_layers, layer_shapes
 from loaders import *
+from enum import Enum
 
 FREQUENCY = 1e9 # TODO: Find a better value (rn using 1GHz)
 
 # From Timeloop output for DRAM
 # Energy (per-scalar-access)               : 128.00 pJ
 ENERGY_PER_HOP = 128 * 1e-6
+NV_LINK_BANDWIDTH = 2.5e+10 #25 GB/s
+BISECTION_BANDWIDTH = 10e+10 #Constant at 10 GB/s
+
+class NetworkArch(Enum):
+    STAR = "Star"
+    RING = "Ring"
+
+# conv2_stats = open('./output_dir/timeloop-model.stats.txt', 'r').read()
 
 class DerivedMetricsEvaluator:
     def __init__(self, strategy: Architecture, gpu_architecture: GPUMemoryScale, num_gpus, workload):
@@ -14,19 +23,49 @@ class DerivedMetricsEvaluator:
         self.num_gpus = num_gpus
         self.workload = workload
 
-    def derive_throughput(self, cycles):
+
+    def parse_total_data_movement(stats):
+        levels = re.split(r'Level \d+', text)[1:]  # Split by Level but skip the header
+        total_bits_moved = 0
+    
+        for level_text in levels:
+            # Extract Word bits
+            word_bits_match = re.search(r'Word bits\s*:\s*(\d+)', level_text)
+            word_bits = int(word_bits_match.group(1)) if word_bits_match else 16  # default 16 bits
+    
+            # Find reads, fills, updates
+            scalar_reads = sum(int(x) for x in re.findall(r'Scalar reads \(per-instance\)\s*:\s*(\d+)', level_text))
+            scalar_fills = sum(int(x) for x in re.findall(r'Scalar fills \(per-instance\)\s*:\s*(\d+)', level_text))
+            scalar_updates = sum(int(x) for x in re.findall(r'Scalar updates \(per-instance\)\s*:\s*(\d+)', level_text))
+    
+            # Total words moved = reads + fills + updates
+            words_moved = scalar_reads + scalar_fills + scalar_updates
+    
+            # Convert to bits
+            bits_moved = words_moved * word_bits
+            total_bits_moved += bits_moved
+    
+        # Convert total bits to bytes
+        total_bytes_moved = total_bits_moved / 8
+        return total_bytes_moved
+
+    
+    def derive_network_latency(self, stats, network_arch: NetworkArch):
         strategy_name = self.strategy.name
         
         # TODO: We need to account for the cost of a hop in terms of cycles
-        if strategy_name == "Base":
-            return cycles / FREQUENCY
-        elif strategy_name == "Data_Parallel":
-            return cycles / FREQUENCY
-        elif strategy_name == "Tensor_Parallel":
-            return cycles / FREQUENCY
-        else:
-            raise ValueError(f"Unsupported Architecture: {self.strategy}")
 
+        return parse_total_data_movement(stats) / self.derive_link_bandwidth(network_arch)
+
+    def derive_timeloop_latency(self, cycles, network_arch: NetworkArch):
+        return cycles / self.derive_link_bandwidth(network_arch)
+
+    def derive_link_bandwidth(self, network_arch: NetworkArch):
+        if network_arch == "STAR":
+            return BISECTION_BANDWIDTH / (self.num_gpus // 2)
+        else if network_arch == "RING":
+            return BISECTION_BANDWIDTH / 2
+    
     """
     This is saying "how many times do the GPUs want to communicate with each other"
     This is not total network hops though because each time each GPU wants to communicate,
@@ -114,3 +153,4 @@ class DerivedMetricsEvaluator:
 
         total_hops = avg_hops_per_comm * total_comms
         return (total_hops, total_hops * ENERGY_PER_HOP)
+

@@ -6,3 +6,4 @@ class ResultKeys:
     RING_HOPS = "ring_hops"
     STAR_HOP_ENERGY = "star_hop_energy"
     RING_HOP_ENERGY = "ring_hop_energy"
+    PEs_CONFIG = "pe_configuration"

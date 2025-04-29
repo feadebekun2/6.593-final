@@ -22,11 +22,17 @@ class GPUMemoryScale(Enum):
         }[self.name]
 
 class RackSize(Enum):
-    RACK_2 = 2
-    RACK_4 = 4
-    RACK_8 = 8
+    RACK_1 = {'gpu_meshX': 1, 'gpu_meshY': 1}
+    RACK_4 = {'gpu_meshX': 2, 'gpu_meshY': 2}
+    RACK_16 = {'gpu_meshX': 4, 'gpu_meshY': 4}
 
-ARCH_CONFIG = {'pe_meshX': 4, 'pe_meshY': 4}
+
+class PEsConfig(Enum):
+    PE_1 = {'pe_meshX': 1, 'pe_meshY': 1}
+    PE_4 = {'pe_meshX': 2, 'pe_meshY': 2}
+    PE_16 ={'pe_meshX': 4, 'pe_meshY': 4}
+
+
 
 # Base configs keep everything in DRAM and have global_buffer_factor set to 1
 base_config = [
@@ -41,7 +47,6 @@ base_config = [
         PE_spatial_factor_M=1,
         PE_spatial_factor_C=1,
         scratchpad_factor_N=1,
-         **ARCH_CONFIG,
     ),
     dict(
         DRAM_factor_N=64,
@@ -54,7 +59,6 @@ base_config = [
         PE_spatial_factor_M=1,
         PE_spatial_factor_C=1,
         scratchpad_factor_N=1,
-         **ARCH_CONFIG,
     ),
     dict(
         DRAM_factor_N=64,
@@ -67,7 +71,6 @@ base_config = [
         PE_spatial_factor_M=1,
         PE_spatial_factor_C=1,
         scratchpad_factor_N=1,
-         **ARCH_CONFIG,
     ),
     dict(
         DRAM_factor_N=64,
@@ -80,7 +83,6 @@ base_config = [
         PE_spatial_factor_M=1,
         PE_spatial_factor_C=1,
         scratchpad_factor_N=1,
-         **ARCH_CONFIG,
     ),
     dict(
         DRAM_factor_N=64,
@@ -93,7 +95,6 @@ base_config = [
         PE_spatial_factor_M=1,
         PE_spatial_factor_C=1,
         scratchpad_factor_N=1,
-         **ARCH_CONFIG,
     ),
     dict(
         DRAM_factor_N=64,
@@ -106,7 +107,6 @@ base_config = [
         PE_spatial_factor_M=1,
         PE_spatial_factor_C=1,
         scratchpad_factor_N=1,
-         **ARCH_CONFIG,
     ),
     dict(
         DRAM_factor_N=64,
@@ -119,7 +119,6 @@ base_config = [
         PE_spatial_factor_M=1,
         PE_spatial_factor_C=1,
         scratchpad_factor_N=1,
-         **ARCH_CONFIG,
     ),
     dict(
         DRAM_factor_N=64,
@@ -132,7 +131,6 @@ base_config = [
         PE_spatial_factor_M=1,
         PE_spatial_factor_C=1,
         scratchpad_factor_N=1,
-         **ARCH_CONFIG,
     ),
     dict(
         DRAM_factor_N=64,
@@ -145,7 +143,6 @@ base_config = [
         PE_spatial_factor_M=1,
         PE_spatial_factor_C=1,
         scratchpad_factor_N=1,
-         **ARCH_CONFIG,
     ),
 ]
 

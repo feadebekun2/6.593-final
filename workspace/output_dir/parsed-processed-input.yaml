@@ -29,16 +29,16 @@ architecture:
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - leak
+              - read
               - write
               - update
-              - read
-              - leak
             enabled: true
           - name: global_buffer[1..1]
             class: SRAM
             attributes:
                 width: 128
-                depth: 1048576
+                depth: 262144
                 datawidth: 16
                 n_banks: 1
                 n_rdwr_ports: 2
@@ -54,31 +54,12 @@ architecture:
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - leak
+              - read
               - write
               - update
-              - read
-              - leak
             enabled: true
-          - name: inter_PE_spatial[1..1]
-            class: dummy_storage
-            attributes:
-                width: 1
-                depth: 1
-                datawidth: 1
-                technology: -1
-                has_power_gating: false
-                n_banks: 2
-                cluster_size: 1
-                reduction_supported: true
-                multiple_buffering: 1
-                min_utilization: 0
-                allow_overbooking: false
-                meshX: 1
-                meshY: 1
-                global_cycle_seconds: 1e-9
-                power_gated_at: null
-            enabled: true
-          - name: scratchpad[1..16]
+          - name: scratchpad[1..1]
             class: smart_storage
             attributes:
                 depth: 128
@@ -91,18 +72,18 @@ architecture:
                 multiple_buffering: 1
                 min_utilization: 0
                 allow_overbooking: false
-                meshX: 4
-                meshY: 4
+                meshX: 1
+                meshY: 1
                 technology: "45nm"
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - leak
+              - read
               - write
               - update
-              - read
-              - leak
             enabled: true
-          - name: weight_reg[1..16]
+          - name: weight_reg[1..1]
             class: reg_storage
             attributes:
                 depth: 1
@@ -115,18 +96,18 @@ architecture:
                 multiple_buffering: 1
                 min_utilization: 0
                 allow_overbooking: false
-                meshX: 4
-                meshY: 4
+                meshX: 1
+                meshY: 1
                 technology: "45nm"
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - leak
+              - read
               - write
               - update
-              - read
-              - leak
             enabled: true
-          - name: input_activation_reg[1..16]
+          - name: input_activation_reg[1..1]
             class: reg_storage
             attributes:
                 depth: 1
@@ -139,18 +120,18 @@ architecture:
                 multiple_buffering: 1
                 min_utilization: 0
                 allow_overbooking: false
-                meshX: 4
-                meshY: 4
+                meshX: 1
+                meshY: 1
                 technology: "45nm"
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - leak
+              - read
               - write
               - update
-              - read
-              - leak
             enabled: true
-          - name: output_activation_reg[1..16]
+          - name: output_activation_reg[1..1]
             class: reg_storage
             attributes:
                 depth: 1
@@ -163,25 +144,25 @@ architecture:
                 multiple_buffering: 1
                 min_utilization: 0
                 allow_overbooking: false
-                meshX: 4
-                meshY: 4
+                meshX: 1
+                meshY: 1
                 technology: "45nm"
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
             required_actions:
+              - leak
+              - read
               - write
               - update
-              - read
-              - leak
             enabled: true
-          - name: mac[1..16]
+          - name: mac[1..1]
             class: mac_compute
             attributes:
                 num_pipline_stages: 2
                 datawidth: 16
                 has_power_gating: false
-                meshX: 4
-                meshY: 4
+                meshX: 1
+                meshY: 1
                 technology: "45nm"
                 global_cycle_seconds: 1e-9
                 power_gated_at: null
@@ -189,78 +170,11 @@ architecture:
               - compute
             enabled: true
 architecture_constraints:
-    targets:
-      - target: DRAM
-        type: temporal
-        factors: P=1,Q=1,R=1,S=1,N=64,M=512,C=512
-        permutation: SRQPCMN
-      - target: global_buffer
-        type: temporal
-        factors: P=1,Q=1,R=1,S=1,N=1,M=1,C=1
-        permutation: SRQPCMN
-      - type: spatial
-        target: inter_PE_spatial
-        factors: P=1,Q=1,R=1,S=1,N=1,M=1,C=1
-        permutation: CMRSPQN
-        split: 1
-      - factors: C=1,M=1,R=1,S=1,N=1,P=1,Q=1
-        permutation: CMRSNPQ
-        type: temporal
-        target: inter_PE_spatial
-      - bypass:
-          - Weights
-          - Inputs
-          - Outputs
-        type: bypass
-        target: inter_PE_spatial
-      - target: scratchpad
-        type: temporal
-        factors: R=0,S=0,P=0,Q=0,M=1,C=1,N=1
-        permutation: QPNCMSR
-      - target: scratchpad
-        type: bypass
-        keep:
-          - Weights
-        bypass:
-          - Inputs
-          - Outputs
-      - target: weight_reg
-        type: temporal
-        factors: R=1,S=1,P=1,Q=1,N=1,C=1,M=1
-        permutation: RSPQCMN
-      - target: weight_reg
-        type: bypass
-        keep:
-          - Weights
-        bypass:
-          - Inputs
-          - Outputs
-      - target: input_activation_reg
-        type: temporal
-        factors: R=1,S=1,P=1,Q=1,N=1,C=1,M=1
-        permutation: RSPQCMN
-      - target: input_activation_reg
-        type: bypass
-        keep:
-          - Inputs
-        bypass:
-          - Weights
-          - Outputs
-      - target: output_activation_reg
-        type: temporal
-        factors: R=1,S=1,P=1,Q=1,N=1,C=1,M=1
-        permutation: RSPQCMN
-      - target: output_activation_reg
-        type: bypass
-        keep:
-          - Outputs
-        bypass:
-          - Weights
-          - Inputs
+    targets: []
 problem:
     version: '0.4'
     shape:
-        name: "Conv5"
+        name: "Conv1"
         dimensions:
           - C
           - M
@@ -271,9 +185,9 @@ problem:
           - Q
         coefficients:
           - name: Wstride
-            default: 1
+            default: 2
           - name: Hstride
-            default: 1
+            default: 2
           - name: Wdilation
             default: 1
           - name: Hdilation
@@ -307,12 +221,12 @@ problem:
               -   -   - P
             read_write: true
     instance:
-        C: 512
-        M: 512
-        R: 3
-        S: 3
-        P: 7
-        Q: 7
+        C: 3
+        M: 64
+        R: 7
+        S: 7
+        P: 112
+        Q: 112
         N: 64
         densities: {}
 compound_components:
@@ -418,7 +332,59 @@ compound_components:
               - name: storage
                 actions:
                   - name: leak
-mapping: []
+mapping:
+  - target: DRAM
+    type: temporal
+    factors: P=1,Q=1,R=1,S=1,N=16,M=64,C=3
+    permutation: SRQPCMN
+  - target: global_buffer
+    type: temporal
+    factors: P=1,Q=1,R=1,S=1,N=2,M=1,C=1
+    permutation: SRQPCMN
+  - target: scratchpad
+    type: temporal
+    factors: R=0,S=0,P=0,Q=0,M=1,C=1,N=1
+    permutation: QPNCMSR
+  - target: scratchpad
+    type: bypass
+    keep:
+      - Weights
+    bypass:
+      - Inputs
+      - Outputs
+  - target: weight_reg
+    type: temporal
+    factors: R=1,S=1,P=1,Q=1,N=1,C=1,M=1
+    permutation: RSPQCMN
+  - target: weight_reg
+    type: bypass
+    keep:
+      - Weights
+    bypass:
+      - Inputs
+      - Outputs
+  - target: input_activation_reg
+    type: temporal
+    factors: R=1,S=1,P=1,Q=1,N=1,C=1,M=1
+    permutation: RSPQCMN
+  - target: input_activation_reg
+    type: bypass
+    keep:
+      - Inputs
+    bypass:
+      - Weights
+      - Outputs
+  - target: output_activation_reg
+    type: temporal
+    factors: R=1,S=1,P=1,Q=1,N=1,C=1,M=1
+    permutation: RSPQCMN
+  - target: output_activation_reg
+    type: bypass
+    keep:
+      - Outputs
+    bypass:
+      - Weights
+      - Inputs
 mapper:
     version: '0.4'
     out_prefix: timeloop-mapper
@@ -450,3 +416,128 @@ globals:
         TIMELOOP_HIDE_INCONSEQUNTIAL_STATS: true
     expression_custom_functions: []
     accelergy_plug_ins: []
+ART:
+    version: '0.4'
+    tables:
+      - name: system_arch_top_level.DRAM[1..1]
+        area: 0.0
+      - name: system_arch_top_level.global_buffer[1..1]
+        area: 12778800.0
+      - name: system_arch_top_level.scratchpad[1..1]
+        area: 1965.98
+      - name: system_arch_top_level.weight_reg[1..1]
+        area: 95.68
+      - name: system_arch_top_level.input_activation_reg[1..1]
+        area: 95.68
+      - name: system_arch_top_level.output_activation_reg[1..1]
+        area: 95.68
+      - name: system_arch_top_level.mac[1..1]
+        area: 1726.5
+ERT:
+    version: '0.4'
+    tables:
+      - name: system_arch_top_level.DRAM[1..1]
+        actions:
+          - name: leak
+            arguments:
+                global_cycle_seconds: 1e-09
+                action_latency_cycles: 1
+            energy: 0.0
+          - name: read
+            arguments:
+                global_cycle_seconds: 1e-09
+                action_latency_cycles: 1
+            energy: 512.0
+          - name: write
+            arguments:
+                global_cycle_seconds: 1e-09
+                action_latency_cycles: 1
+            energy: 512.0
+          - name: update
+            arguments:
+                global_cycle_seconds: 1e-09
+                action_latency_cycles: 1
+            energy: 512.0
+      - name: system_arch_top_level.global_buffer[1..1]
+        actions:
+          - name: leak
+            arguments:
+                global_cycle_seconds: 1e-09
+                action_latency_cycles: 1
+            energy: 0.0993478
+          - name: read
+            arguments:
+                global_cycle_seconds: 1e-09
+                action_latency_cycles: 1
+            energy: 299.928
+          - name: write
+            arguments:
+                global_cycle_seconds: 1e-09
+                action_latency_cycles: 1
+            energy: 275.289
+          - name: update
+            arguments:
+                global_cycle_seconds: 1e-09
+                action_latency_cycles: 1
+            energy: 275.289
+      - name: system_arch_top_level.scratchpad[1..1]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0.83416
+          - name: write
+            arguments: {}
+            energy: 0.83416
+          - name: update
+            arguments: {}
+            energy: 0.83416
+          - name: leak
+            arguments: {}
+            energy: 0.0007728
+      - name: system_arch_top_level.weight_reg[1..1]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0.144
+          - name: write
+            arguments: {}
+            energy: 0.144
+          - name: update
+            arguments: {}
+            energy: 0.144
+          - name: leak
+            arguments: {}
+            energy: 0.00112
+      - name: system_arch_top_level.input_activation_reg[1..1]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0.144
+          - name: write
+            arguments: {}
+            energy: 0.144
+          - name: update
+            arguments: {}
+            energy: 0.144
+          - name: leak
+            arguments: {}
+            energy: 0.00112
+      - name: system_arch_top_level.output_activation_reg[1..1]
+        actions:
+          - name: read
+            arguments: {}
+            energy: 0.144
+          - name: write
+            arguments: {}
+            energy: 0.144
+          - name: update
+            arguments: {}
+            energy: 0.144
+          - name: leak
+            arguments: {}
+            energy: 0.00112
+      - name: system_arch_top_level.mac[1..1]
+        actions:
+          - name: compute
+            arguments: {}
+            energy: 3.275

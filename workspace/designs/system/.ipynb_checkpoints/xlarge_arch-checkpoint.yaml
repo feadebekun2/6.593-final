@@ -21,14 +21,15 @@ architecture:
       datawidth: datawidth
 
   - !Container
-    name: chip
+    name: GPU
+    spatial: {meshX: {{gpu_meshX}}, meshY: {{gpu_meshY}}
     
   - !Component
     name: global_buffer
     class: SRAM
     attributes:
       width: 128
-      depth: 8192 * 8192
+      depth: 8192 * 8192 # 1024 MB
       datawidth: datawidth
       n_banks: 1
       n_rdwr_ports: 2

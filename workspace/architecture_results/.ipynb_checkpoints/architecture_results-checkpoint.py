@@ -3,7 +3,7 @@ from enum import Enum
 from typing import List
 import json
 import os
-from architectures.architecture_constants import Architecture, GPUMemoryScale, RackSize
+from architectures.architecture_constants import Architecture, GPUMemoryScale, RackSize, PEsConfig
 from results_constants import ResultKeys
 
 class ArchitectureResults:
@@ -21,13 +21,29 @@ class ArchitectureResults:
     def save_to_json(self, filename: str = "results.json", dir_path: str = "persisted_results"):
         os.makedirs(dir_path, exist_ok=True)
         full_path = os.path.join(dir_path, filename)
-
-        serializable_data = {
-            str((arch.name, scale.name, rack.name)): metrics
-            for (arch, scale, rack), metrics in self.data.items()
+    
+        # Prepare your new data
+        new_data = {
+            str((arch.name, scale.name, rack.name, peConfig.name)): metrics
+            for (arch, scale, rack, peConfig), metrics in self.data.items()
         }
+    
+        # Step 1: Try loading existing data if the file exists
+        if os.path.exists(full_path):
+            with open(full_path, 'r') as f:
+                try:
+                    existing_data = json.load(f)
+                except json.JSONDecodeError:
+                    existing_data = {}
+        else:
+            existing_data = {}
+    
+        # Step 2: Merge existing data with new data
+        existing_data.update(new_data)  # new_data overwrites keys if they already exist
+    
+        # Step 3: Write the merged data back
         with open(full_path, 'w') as f:
-            json.dump(serializable_data, f, indent=2)
+            json.dump(existing_data, f, indent=2)
 
     def load_from_json(self, filename: str = "results.json", dir_path: str = "persisted_results"):
         full_path = os.path.join(dir_path, filename)
@@ -45,11 +61,11 @@ class ArchitectureResults:
             )
             self.data[key] = metrics
 
-    def add(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize,
+    def add(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize, peConfig: PEsConfig,
             cycles: List[float], energy: List[float],
             tp: float, star_hops: float, ring_hops: float,
             star_hop_energy: float, ring_hop_energy: float):
-        key = (arch, scale, rack)
+        key = (arch, scale, rack, peConfig)
         self.data[key][ResultKeys.CYCLES] = cycles
         self.data[key][ResultKeys.ENERGY] = energy
         self.data[key][ResultKeys.THROUGHPUT] = tp

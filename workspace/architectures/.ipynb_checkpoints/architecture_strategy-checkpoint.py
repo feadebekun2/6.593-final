@@ -1,14 +1,15 @@
-from architectures.architecture_constants import Architecture, GPUMemoryScale, base_config, resnet_18_layers
+from architectures.architecture_constants import Architecture, GPUMemoryScale, PEsConfig, base_config, resnet_18_layers
 from architecture_results.derived_metrics_evaluator import DerivedMetricsEvaluator
 from loaders import *
 from results_constants import ResultKeys
 
 class WorkloadStrategy:
-    def __init__(self, strategy: Architecture, gpu_architecture: GPUMemoryScale, num_gpus, debug):
+    def __init__(self, strategy: Architecture, gpu_architecture: GPUMemoryScale, peConfig: PEsConfig, num_gpus, debug):
         self.strategy = strategy
         self.gpu_architecture = gpu_architecture
         self.num_gpus = num_gpus
         self.debug = debug
+        self.peConfig = peConfig
 
         if self.strategy == Architecture.Base:
             self.workload = self.__build_base_architecture()
@@ -22,11 +23,12 @@ class WorkloadStrategy:
         self.derivedMetricsEvaluator = DerivedMetricsEvaluator(strategy, gpu_architecture, num_gpus, self.workload)
 
     def __build_base_architecture(self):
-        return base_config
+        return list(map(lambda x: {**x, **(self.peConfig)}, base_config))
 
     def __built_dp_architecture(self):
         dp_configs = []
-        for config in base_config:
+        base_config_with_PEs = list(map(lambda x: {**x, **(self.peConfig)}, base_config))
+        for config in base_config_with_PEs:
             dp_config = config.copy()
             dp_config["PE_spatial_factor_N"] *= self.num_gpus
             dp_config["global_buffer_factor_N"] *= self.num_gpus
@@ -36,7 +38,8 @@ class WorkloadStrategy:
 
     def __build_tp_architecture(self):
         tp_configs = []
-        for config in base_config:
+        base_config_with_PEs = list(map(lambda x: {**x, **(self.peConfig)}, base_config))
+        for config in base_config_with_PEs:
             tp_config = config.copy()
             tp_config["PE_spatial_factor_M"] *= self.num_gpus
             tp_config["global_buffer_factor_M"] *= self.num_gpus
@@ -54,56 +57,61 @@ class WorkloadStrategy:
             ResultKeys.STAR_HOP_ENERGY: 0,
             ResultKeys.RING_HOP_ENERGY: 0,
         }
-
+        
         flat_index = 0
         for i, (filename, count) in enumerate(resnet_18_layers.items()):
             config = self.workload[i]
 
-            for _ in range(count):  # Repeat for repeated layers
-                print(f"Running layer {flat_index + 1}: {filename}")
-                flat_index += 1
-                # Skip computation on configs that already had errors
-                if results[ResultKeys.THROUGHPUT] == -1:
-                    results[ResultKeys.ENERGY].append(-1)
-                    results[ResultKeys.CYCLES].append(-1)
-                    results[ResultKeys.THROUGHPUT] = -1
-                    continue
+            
+            print(f"Running layer {flat_index + 1}: {filename} which occurs {count} times")
+            flat_index += 1
 
-                # If debug is enabled, just add -1 to run through each config
-                if self.debug:
+            
+            # Skip computation on configs that already had errors
+            if results[ResultKeys.THROUGHPUT] == -1:
+                results[ResultKeys.ENERGY].append(-1)
+                results[ResultKeys.CYCLES].append(-1)
+                results[ResultKeys.THROUGHPUT] = -1
+                continue
+
+            # If debug is enabled, just add -1 to run through each config
+            if self.debug:
+                results[ResultKeys.ENERGY].append(-1)
+                results[ResultKeys.CYCLES].append(-1)
+                results[ResultKeys.THROUGHPUT] = -1
+
+            # If debug is disabled, run the actual config
+            else:
+                try:
+                    result = run_timeloop_model(
+                        config,
+                        architecture=self.gpu_architecture.value,
+                        mapping='designs/system/map.yaml',
+                        problem=f"layer_shapes/{filename}.yaml",
+                    )
+            
+                    with open('./output_dir/timeloop-model.stats.txt', 'r') as f:
+                        stats = f.read()
+        
+                    lines = stats.split('\n')
+                    energy = float([l for l in lines if 'Energy:' in l][0].split(' ', 2)[1])
+                    cycles = int([l for l in lines if 'Cycles:' in l][0].split(' ', 1)[1])
+
+                    for i in range(count):
+                        print(f"Adding energy and cycle stats for {filename} occurence {i+1}")
+                        results[ResultKeys.ENERGY].append(energy)
+                        results[ResultKeys.CYCLES].append(cycles)
+                        flat_index += 1
+
+    
+                except Exception as e:
+                    print(f"Error running layer {filename}: {e}")
                     results[ResultKeys.ENERGY].append(-1)
                     results[ResultKeys.CYCLES].append(-1)
                     results[ResultKeys.THROUGHPUT] = -1
-    
-                # If debug is disabled, run the actual config
-                else:
-                    try:
-                        result = run_timeloop_model(
-                            config,
-                            architecture=self.gpu_architecture.value,
-                            mapping='designs/system/map.yaml',
-                            problem=f"layer_shapes/{filename}.yaml",
-                        )
-            
-                        with open('./output_dir/timeloop-model.stats.txt', 'r') as f:
-                            stats = f.read()
-            
-                        lines = stats.split('\n')
-                        energy = float([l for l in lines if 'Energy:' in l][0].split(' ', 2)[1])
-                        cycles = int([l for l in lines if 'Cycles:' in l][0].split(' ', 1)[1])
-        
-                        results[ResultKeys.ENERGY] = energy
-                        results[ResultKeys.CYCLES] = cycles
-    
-        
-                    except Exception as e:
-                        print(f"Error running layer {filename}: {e}")
-                        results[ResultKeys.ENERGY].append(-1)
-                        results[ResultKeys.CYCLES].append(-1)
-                        results[ResultKeys.THROUGHPUT] = -1
 
         if results[ResultKeys.THROUGHPUT] != -1:
-            results[ResultKeys.THROUGHPUT] = self.derivedMetricsEvaluator.derive_throughput(results[ResultKeys.CYCLES])
+            results[ResultKeys.THROUGHPUT] = self.derivedMetricsEvaluator.derive_throughput(sum(results[ResultKeys.CYCLES]))
         
         # These are independent of failures
         star_hops, star_hop_energy = self.derivedMetricsEvaluator.derive_total_star_hops_and_energy()

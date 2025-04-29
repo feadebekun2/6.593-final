@@ -21,7 +21,8 @@ architecture:
       datawidth: datawidth
 
   - !Container
-    name: chip
+    name: GPU
+    spatial: {meshX: {{gpu_meshX}}, meshY: {{gpu_meshY}}
     
   - !Component
     name: global_buffer
