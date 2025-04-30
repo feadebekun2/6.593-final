@@ -7,8 +7,21 @@ constraints:
     bypass: []
   - target: DRAM
     type: temporal
-    factors: [R=1, S=1, P=1, Q=1]
-    permutation: [R, S, Q, P, C, M, N]
+    factors: [R=1, S=1, P=1, Q=1, N=64]
+    permutation: [R, S, Q, P, C, M, N] 
+
+  - target: GPU
+    type: spatial
+    factors: 
+    - P=1
+    - Q=1
+    - R=1
+    - S=1
+    - N=1
+    - C=1
+    - M=1
+    permutation: [N, M, R, S, P, Q, C]
+    
   - target: global_buffer
     type: dataspace
     keep: [Inputs, Outputs, Weights]
@@ -17,6 +30,7 @@ constraints:
     type: temporal
     factors: [P=1, Q=1, R=1, S=1]
     permutation: [S, R, Q, P, C, M, N]
+    
   - target: PE
     type: spatial
     factors: 

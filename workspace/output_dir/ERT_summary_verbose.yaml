@@ -14,20 +14,20 @@ ERT_summary:
         primitive_estimation(s):
           - system_arch_top_level.DRAM[1..1]:
                 estimator: CactiDRAM
-      - name: system_arch_top_level.global_buffer[1..1]
+      - name: system_arch_top_level.global_buffer[1..4]
         actions:
           - name: leak
-            energy: 0.0993478
+            energy: 0.397729
           - name: read
-            energy: 299.928
+            energy: 588.096
           - name: write
-            energy: 275.289
+            energy: 562.791
           - name: update
-            energy: 275.289
+            energy: 562.791
         primitive_estimation(s):
-          - system_arch_top_level.global_buffer[1..1]:
+          - system_arch_top_level.global_buffer[1..4]:
                 estimator: CactiSRAM
-      - name: system_arch_top_level.scratchpad[1..1]
+      - name: system_arch_top_level.scratchpad[1..16]
         actions:
           - name: read
             energy: 0.83416
@@ -112,7 +112,7 @@ ERT_summary:
                 interpreted_energy: 0.0007727999999999998
                 percentage: 100.0%
                 estimator: Aladdin_table
-      - name: system_arch_top_level.weight_reg[1..1]
+      - name: system_arch_top_level.weight_reg[1..16]
         actions:
           - name: read
             energy: 0.144
@@ -191,7 +191,7 @@ ERT_summary:
                 interpreted_energy: 0.00112
                 percentage: 100.0%
                 estimator: Aladdin_table
-      - name: system_arch_top_level.input_activation_reg[1..1]
+      - name: system_arch_top_level.input_activation_reg[1..16]
         actions:
           - name: read
             energy: 0.144
@@ -270,7 +270,7 @@ ERT_summary:
                 interpreted_energy: 0.00112
                 percentage: 100.0%
                 estimator: Aladdin_table
-      - name: system_arch_top_level.output_activation_reg[1..1]
+      - name: system_arch_top_level.output_activation_reg[1..16]
         actions:
           - name: read
             energy: 0.144
@@ -349,7 +349,7 @@ ERT_summary:
                 interpreted_energy: 0.00112
                 percentage: 100.0%
                 estimator: Aladdin_table
-      - name: system_arch_top_level.mac[1..1]
+      - name: system_arch_top_level.mac[1..16]
         actions:
           - name: compute
             energy: 3.275

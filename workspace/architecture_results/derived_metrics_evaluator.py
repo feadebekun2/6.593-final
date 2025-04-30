@@ -1,4 +1,4 @@
-from architectures.architecture_constants import Architecture, GPUMemoryScale, base_config, resnet_18_layers, layer_shapes
+from architectures.architecture_constants import Architecture, GPUMemoryScale, NetworkArch, base_config, resnet_18_layers, layer_shapes
 from loaders import *
 from enum import Enum
 
@@ -10,14 +10,10 @@ ENERGY_PER_HOP = 128 * 1e-6
 NV_LINK_BANDWIDTH = 2.5e+10 #25 GB/s
 BISECTION_BANDWIDTH = 10e+10 #Constant at 10 GB/s
 
-class NetworkArch(Enum):
-    STAR = "Star"
-    RING = "Ring"
-
 # conv2_stats = open('./output_dir/timeloop-model.stats.txt', 'r').read()
 
 class DerivedMetricsEvaluator:
-    def __init__(self, strategy: Architecture, gpu_architecture: GPUMemoryScale, num_gpus, workload):
+    def __init__(self, strategy: Architecture, gpu_architecture: GPUMemoryScale, num_gpus):
         self.strategy = strategy
         self.gpu_architecture = gpu_architecture
         self.num_gpus = num_gpus
@@ -49,6 +45,9 @@ class DerivedMetricsEvaluator:
         total_bytes_moved = total_bits_moved / 8
         return total_bytes_moved
 
+
+    #We will use these to compare - is the output bottlenecked by network latency? Or timeloop latency? 
+
     
     def derive_network_latency(self, stats, network_arch: NetworkArch):
         strategy_name = self.strategy.name
@@ -63,7 +62,7 @@ class DerivedMetricsEvaluator:
     def derive_link_bandwidth(self, network_arch: NetworkArch):
         if network_arch == "STAR":
             return BISECTION_BANDWIDTH / (self.num_gpus // 2)
-        else if network_arch == "RING":
+        elif network_arch == "RING":
             return BISECTION_BANDWIDTH / 2
     
     """

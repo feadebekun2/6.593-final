@@ -22,7 +22,7 @@ architecture:
 
   - !Container
     name: GPU
-    spatial: {meshX: {{gpu_meshX}}, meshY: {{gpu_meshY}}
+    spatial: {meshX: {{num_gpus}}, meshY: 1}
     
   - !Component
     name: global_buffer

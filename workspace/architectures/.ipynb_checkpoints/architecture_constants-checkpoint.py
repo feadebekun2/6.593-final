@@ -1,4 +1,5 @@
 from enum import Enum
+from dataclasses import dataclass
 
 # The 3 architectures we are working with
 class Architecture(Enum):
@@ -22,15 +23,25 @@ class GPUMemoryScale(Enum):
         }[self.name]
 
 class RackSize(Enum):
-    RACK_1 = {'gpu_meshX': 1, 'gpu_meshY': 1}
-    RACK_4 = {'gpu_meshX': 2, 'gpu_meshY': 2}
-    RACK_16 = {'gpu_meshX': 4, 'gpu_meshY': 4}
+    RACK_4 = 4
+    RACK_8 = 8
+    RACK_16 = 16
 
+
+@dataclass(frozen=True)
+class PEConfig:
+    pe_meshX: int
+    pe_meshY: int
 
 class PEsConfig(Enum):
-    PE_1 = {'pe_meshX': 1, 'pe_meshY': 1}
-    PE_4 = {'pe_meshX': 2, 'pe_meshY': 2}
-    PE_16 ={'pe_meshX': 4, 'pe_meshY': 4}
+    PE_1 = PEConfig(1, 1)
+    PE_4 = PEConfig(2, 2)
+    PE_16 = PEConfig(4, 4)
+
+class NetworkArch(Enum):
+    STAR = "Star"
+    RING = "Ring"
+
 
 
 

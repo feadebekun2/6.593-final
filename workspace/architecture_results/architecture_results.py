@@ -19,6 +19,11 @@ class ArchitectureResults:
             ResultKeys.RING_HOP_ENERGY: None,
         })
 
+
+    def get_config_str(self, arch, scale, rack, peConfig):
+        """Generate a standardized configuration string."""
+        return f"{arch.name}, {scale.name}, {rack.name}, {peConfig.name}"
+        
     def save_to_json(self, filename: str = "results.json", dir_path: str = "persisted_results"):
         os.makedirs(dir_path, exist_ok=True)
         full_path = os.path.join(dir_path, filename)
@@ -62,10 +67,12 @@ class ArchitectureResults:
             )
             self.data[key] = metrics
 
+    #add results from a whole layer. 
     def add(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize, peConfig: PEsConfig,
             cycles: List[float], energy: List[float],
             tp: float, star_hops: float, ring_hops: float,
             star_hop_energy: float, ring_hop_energy: float):
+        
         key = (arch, scale, rack, peConfig)
         self.data[key][ResultKeys.CYCLES] = cycles
         self.data[key][ResultKeys.ENERGY] = energy
@@ -74,7 +81,7 @@ class ArchitectureResults:
         self.data[key][ResultKeys.RING_HOPS] = ring_hops
         self.data[key][ResultKeys.STAR_HOP_ENERGY] = star_hop_energy
         self.data[key][ResultKeys.RING_HOP_ENERGY] = ring_hop_energy
-
+    
     def get_cycles(self, arch: Architecture, scale: GPUMemoryScale, rack: RackSize) -> float:
         return self.data[(arch, scale, rack)][ResultKeys.CYCLES]
 

@@ -12,15 +12,18 @@ class WorkloadStrategy:
         self.peConfig = peConfig
 
         if self.strategy == Architecture.Base:
-            self.workload = self.__build_base_architecture()
+            # self.workload = self.__build_base_architecture()
+            self.constraints = 'designs/system/constraints_Base.yaml'
         elif self.strategy == Architecture.Data_Parallel:
-            self.workload = self.__built_dp_architecture()
+            # self.workload = self.__built_dp_architecture()
+            self.constraints = 'designs/system/constraints_DP.yaml'
         elif self.strategy == Architecture.Tensor_Parallel:
-            self.workload = self.__build_tp_architecture()
+            # self.workload = self.__build_tp_architecture()
+            self.constraints = 'designs/system/constraints_TP.yaml'
         else:
             raise ValueError(f"Unsupported Architecture: {strategy}")
 
-        self.derivedMetricsEvaluator = DerivedMetricsEvaluator(strategy, gpu_architecture, num_gpus, self.workload)
+        # self.derivedMetricsEvaluator = DerivedMetricsEvaluator(strategy, gpu_architecture, num_gpus, self.workload)
 
     def __build_base_architecture(self):
         return list(map(lambda x: {**x, **(self.peConfig)}, base_config))
@@ -57,14 +60,14 @@ class WorkloadStrategy:
             ResultKeys.STAR_HOP_ENERGY: 0,
             ResultKeys.RING_HOP_ENERGY: 0,
         }
+
+        layer_stats = {}
+        layer_mappings = {}
         
         flat_index = 0
         for i, (filename, count) in enumerate(resnet_18_layers.items()):
-            config = self.workload[i]
-
             
             print(f"Running layer {flat_index + 1}: {filename} which occurs {count} times")
-            flat_index += 1
 
             
             # Skip computation on configs that already had errors
@@ -83,16 +86,22 @@ class WorkloadStrategy:
             # If debug is disabled, run the actual config
             else:
                 try:
-                    result = run_timeloop_model(
-                        config,
+                    result = run_timeloop_mapper(
+                        {'num_gpus': self.num_gpus, 'pe_meshX': self.peConfig.pe_meshX, 'pe_meshY': self.peConfig.pe_meshY},
+                        constraints=self.constraints,
                         architecture=self.gpu_architecture.value,
-                        mapping='designs/system/map.yaml',
+                        mapper='designs/_include/mapper.yaml',
                         problem=f"layer_shapes/{filename}.yaml",
                     )
-            
-                    with open('./output_dir/timeloop-model.stats.txt', 'r') as f:
+                    
+
+                    #get results, mapping, and stats. 
+                    layer_mappings[filename] = result.mapping
+                    with open('./output_dir/timeloop-mapper.stats.txt', 'r') as f:
                         stats = f.read()
-        
+
+                    layer_stats[filename] = stats
+                    
                     lines = stats.split('\n')
                     energy = float([l for l in lines if 'Energy:' in l][0].split(' ', 2)[1])
                     cycles = int([l for l in lines if 'Cycles:' in l][0].split(' ', 1)[1])
@@ -111,18 +120,22 @@ class WorkloadStrategy:
                     results[ResultKeys.THROUGHPUT] = -1
 
         if results[ResultKeys.THROUGHPUT] != -1:
-            results[ResultKeys.THROUGHPUT] = self.derivedMetricsEvaluator.derive_throughput(sum(results[ResultKeys.CYCLES]))
+            # results[ResultKeys.THROUGHPUT] = self.derivedMetricsEvaluator.derive_throughput(sum(results[ResultKeys.CYCLES]))
+            results[ResultKeys.THROUGHPUT] = 0
         
         # These are independent of failures
-        star_hops, star_hop_energy = self.derivedMetricsEvaluator.derive_total_star_hops_and_energy()
-        ring_hops, ring_hop_energy = self.derivedMetricsEvaluator.derive_total_ring_hops_and_energy()
+        # star_hops, star_hop_energy = self.derivedMetricsEvaluator.derive_total_star_hops_and_energy()
+        # ring_hops, ring_hop_energy = self.derivedMetricsEvaluator.derive_total_ring_hops_and_energy()
+
+        star_hops, star_hop_energy = 0, 0
+        ring_hops, ring_hop_energy = 0, 0
         
         results[ResultKeys.STAR_HOPS] = star_hops
         results[ResultKeys.RING_HOPS] = ring_hops
         results[ResultKeys.STAR_HOP_ENERGY] = star_hop_energy
         results[ResultKeys.RING_HOP_ENERGY] = ring_hop_energy
 
-        return results
+        return results, layer_stats, layer_mappings
         
 
     

@@ -1,7 +1,7 @@
 architecture:
     version: '0.4'
     local:
-      - name: system_arch_top_level.scratchpad[1..1]
+      - name: system_arch_top_level.scratchpad[1..16]
         class: smart_storage
         attributes:
             depth: 128
@@ -14,8 +14,8 @@ architecture:
             multiple_buffering: 1
             min_utilization: 0
             allow_overbooking: false
-            meshX: 1
-            meshY: 1
+            meshX: 8
+            meshY: 2
             technology: "45nm"
             global_cycle_seconds: 1e-09
             power_gated_at: null
@@ -92,7 +92,7 @@ architecture:
                     technology: "45nm"
                     n_instances: 1
                 energy_scale: 1.0
-      - name: system_arch_top_level.weight_reg[1..1]
+      - name: system_arch_top_level.weight_reg[1..16]
         class: reg_storage
         attributes:
             depth: 1
@@ -105,8 +105,8 @@ architecture:
             multiple_buffering: 1
             min_utilization: 0
             allow_overbooking: false
-            meshX: 1
-            meshY: 1
+            meshX: 8
+            meshY: 2
             technology: "45nm"
             global_cycle_seconds: 1e-09
             power_gated_at: null
@@ -177,7 +177,7 @@ architecture:
                     technology: "45nm"
                     n_instances: 1
                 energy_scale: 1.0
-      - name: system_arch_top_level.input_activation_reg[1..1]
+      - name: system_arch_top_level.input_activation_reg[1..16]
         class: reg_storage
         attributes:
             depth: 1
@@ -190,8 +190,8 @@ architecture:
             multiple_buffering: 1
             min_utilization: 0
             allow_overbooking: false
-            meshX: 1
-            meshY: 1
+            meshX: 8
+            meshY: 2
             technology: "45nm"
             global_cycle_seconds: 1e-09
             power_gated_at: null
@@ -262,7 +262,7 @@ architecture:
                     technology: "45nm"
                     n_instances: 1
                 energy_scale: 1.0
-      - name: system_arch_top_level.output_activation_reg[1..1]
+      - name: system_arch_top_level.output_activation_reg[1..16]
         class: reg_storage
         attributes:
             depth: 1
@@ -275,8 +275,8 @@ architecture:
             multiple_buffering: 1
             min_utilization: 0
             allow_overbooking: false
-            meshX: 1
-            meshY: 1
+            meshX: 8
+            meshY: 2
             technology: "45nm"
             global_cycle_seconds: 1e-09
             power_gated_at: null
@@ -347,14 +347,14 @@ architecture:
                     technology: "45nm"
                     n_instances: 1
                 energy_scale: 1.0
-      - name: system_arch_top_level.mac[1..1]
+      - name: system_arch_top_level.mac[1..16]
         class: mac_compute
         attributes:
             num_pipline_stages: 2
             datawidth: 16
             has_power_gating: false
-            meshX: 1
-            meshY: 1
+            meshX: 8
+            meshY: 2
             technology: "45nm"
             global_cycle_seconds: 1e-09
             power_gated_at: null
@@ -412,7 +412,10 @@ architecture:
             arguments:
                 global_cycle_seconds: 1e-09
                 action_latency_cycles: 1
-      - name: system_arch_top_level.global_buffer[1..1]
+      - name: system_arch_top_level.inter_GPU_spatial[1..1]
+        class: dummy_storage
+        actions: []
+      - name: system_arch_top_level.global_buffer[1..4]
         class: SRAM
         actions:
           - name: leak
@@ -431,3 +434,6 @@ architecture:
             arguments:
                 global_cycle_seconds: 1e-09
                 action_latency_cycles: 1
+      - name: system_arch_top_level.inter_PE_spatial[1..4]
+        class: dummy_storage
+        actions: []
