@@ -10,7 +10,7 @@ class WorkloadStrategy:
         self.num_gpus = num_gpus
         self.debug = debug
         self.peConfig = peConfig
-
+       
         if self.strategy == Architecture.Base:
             # self.workload = self.__build_base_architecture()
             self.constraints = 'designs/system/constraints_Base.yaml'
@@ -23,7 +23,7 @@ class WorkloadStrategy:
         else:
             raise ValueError(f"Unsupported Architecture: {strategy}")
 
-        # self.derivedMetricsEvaluator = DerivedMetricsEvaluator(strategy, gpu_architecture, num_gpus, self.workload)
+        self.derivedMetricsEvaluator = DerivedMetricsEvaluator(strategy, gpu_architecture, num_gpus, self.workload)
 
     def __build_base_architecture(self):
         return list(map(lambda x: {**x, **(self.peConfig)}, base_config))
@@ -120,15 +120,13 @@ class WorkloadStrategy:
                     results[ResultKeys.THROUGHPUT] = -1
 
         if results[ResultKeys.THROUGHPUT] != -1:
-            # results[ResultKeys.THROUGHPUT] = self.derivedMetricsEvaluator.derive_throughput(sum(results[ResultKeys.CYCLES]))
+            results[ResultKeys.THROUGHPUT] = self.derivedMetricsEvaluator.derive_throughput(sum(results[ResultKeys.CYCLES]))
+        else:
             results[ResultKeys.THROUGHPUT] = 0
         
         # These are independent of failures
-        # star_hops, star_hop_energy = self.derivedMetricsEvaluator.derive_total_star_hops_and_energy()
-        # ring_hops, ring_hop_energy = self.derivedMetricsEvaluator.derive_total_ring_hops_and_energy()
-
-        star_hops, star_hop_energy = 0, 0
-        ring_hops, ring_hop_energy = 0, 0
+        star_hops, star_hop_energy = self.derivedMetricsEvaluator.derive_total_star_hops_and_energy()
+        ring_hops, ring_hop_energy = self.derivedMetricsEvaluator.derive_total_ring_hops_and_energy()
         
         results[ResultKeys.STAR_HOPS] = star_hops
         results[ResultKeys.RING_HOPS] = ring_hops

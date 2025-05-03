@@ -7,9 +7,9 @@ constraints:
     bypass: []
   - target: DRAM
     type: temporal
-    factors: [R=1, S=1, P=1, Q=1, N=64]
+    factors: [R=1, S=1, P=1, Q=1, M=1, C=1]
     permutation: [R, S, Q, P, C, M, N] 
-
+# For tp, change this but then keep everything below GPU
   - target: GPU
     type: spatial
     factors: 
@@ -17,7 +17,7 @@ constraints:
     - Q=1
     - R=1
     - S=1
-    - N <= {{num_gpus}}
+    - N = {{num_gpus}}
     - C=1
     - M=1
     permutation: [N, M, R, S, P, Q, C]
@@ -26,10 +26,6 @@ constraints:
     type: dataspace
     keep: [Inputs, Outputs, Weights]
     bypass: []
-  - target: global_buffer
-    type: temporal
-    factors: [P=1, Q=1, R=1, S=1]
-    permutation: [S, R, Q, P, C, M, N]
     
   - target: PE
     type: spatial
@@ -47,10 +43,6 @@ constraints:
     type: dataspace
     keep: [Weights]
     bypass: [Inputs, Outputs]
-  - target: scratchpad
-    type: temporal
-    factors: [R=0, S=0, P=0, Q=0, M=1, C=1]
-    permutation: [Q, P, N, C, M, S, R]
 
   - target: weight_reg
     type: dataspace

@@ -19,18 +19,14 @@ constraints:
     - S=1
     - N=1
     - C=1
-    - M<={{num_gpus}}
+    - M = {{num_gpus}}
     permutation: [M, N, R, S, P, Q, C]
     
   - target: global_buffer
     type: dataspace
     keep: [Inputs, Outputs, Weights]
     bypass: []
-  - target: global_buffer
-    type: temporal
-    factors: [P=1, Q=1, R=1, S=1]
-    permutation: [S, R, Q, P, C, M, N]
-    
+ 
   - target: PE
     type: spatial
     factors: 

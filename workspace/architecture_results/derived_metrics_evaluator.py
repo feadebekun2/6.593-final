@@ -13,7 +13,7 @@ BISECTION_BANDWIDTH = 10e+10 #Constant at 10 GB/s
 # conv2_stats = open('./output_dir/timeloop-model.stats.txt', 'r').read()
 
 class DerivedMetricsEvaluator:
-    def __init__(self, strategy: Architecture, gpu_architecture: GPUMemoryScale, num_gpus):
+    def __init__(self, strategy: Architecture, gpu_architecture: GPUMemoryScale, num_gpus, workload):
         self.strategy = strategy
         self.gpu_architecture = gpu_architecture
         self.num_gpus = num_gpus
@@ -139,6 +139,9 @@ class DerivedMetricsEvaluator:
     4 GPUs means each comm has a 2/3 chance of being 1 hop away and 1/3 chance of being 2 hops away (1.33 hops on average per comm)
     8 GPUs means each comm has 2 gpus 1 hop away, 2 gpus 2 hops away, 2 gpus 3 hops away, and only 1 gpu 4 hops away
         This means (2 * 1 + 2 * 2 + 2 * 3 + 1 * 4) = 16 hops per 7 GPUs = 16/7 (~2.29 hops on average per comm)
+    16 GPUs means same math as 8 which is:
+        64 hops/ 15 nodes = ~4.266666...
+    
     """
     def derive_total_ring_hops_and_energy(self):
         total_comms = self.__derive_total_communication_events()
@@ -149,6 +152,8 @@ class DerivedMetricsEvaluator:
             avg_hops_per_comm = 4/3
         if self.num_gpus == 8:
             avg_hops_per_comm = 16/7
+        if self.num_gpus == 16:
+            avg_hops_per_comm = 64/15
 
         total_hops = avg_hops_per_comm * total_comms
         return (total_hops, total_hops * ENERGY_PER_HOP)
