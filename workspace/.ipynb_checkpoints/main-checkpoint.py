@@ -39,81 +39,75 @@ class TimeLoopExperimentController:
     Runs the linear combos of all of the different configs (parallel strat, num GPUS, and memory per GPU)
     And collects results for each in self.results
     """
-    def run_all(self):
-
+    def run_all(self, base_dir: str = None):
         est = pytz.timezone('US/Eastern')
-        timestamp = datetime.now(est).strftime("%B %d, %Y %I:%M:%S %p EST")
-        base_dir = f"persisted_results/results_{timestamp}"
-
-        
-        for arch in Architecture:
-            for rack in RackSize:
+        if base_dir is None:
+            timestamp = datetime.now(est).strftime("%B %d, %Y %I:%M:%S %p EST")
+            base_dir = f"persisted_results/results_{timestamp}"
+    
+        def _run_config(arch, scale, rack, peConfig):
+            key = (arch, scale, rack, peConfig)
+            config_str = f"{arch.name}, {scale.name}, {rack.name}, {peConfig.name}"
+            config_dir = os.path.join(base_dir, config_str)
+            layer_results_dir = os.path.join(config_dir, "Layer Results")
+    
+            # Skip if directory exists (already computed)
+            if os.path.exists(config_dir):
+                print(f"Skipping existing config dir: {config_str}")
+                return
+            os.makedirs(layer_results_dir, exist_ok=True)
+    
+            print("=" * 50)
+            print("Starting Timeloop with configuration:")
+            print(f"  - arch: {arch}")
+            print(f"  - scale: {scale}")
+            print(f"  - rack: {rack}")
+            print(f"  - peConfig: {peConfig}")
+            print("=" * 50)
+    
+            architecture = WorkloadStrategy(arch, scale, peConfig.value, rack.value, self.debug)
+            results, layer_stats, layer_mappings = architecture.run_workload()
+            self.__check_returned_vals(results)
+    
+            # Save per-layer stats and mappings
+            for layer_name, layer_stat in layer_stats.items():
+                per_layer_dir = os.path.join(layer_results_dir, layer_name)
+                os.makedirs(per_layer_dir, exist_ok=True)
+                with open(os.path.join(per_layer_dir, "stats.txt"), 'w') as f:
+                    f.write(str(layer_stat))
+    
+            for layer_name, layer_mapping in layer_mappings.items():
+                per_layer_dir = os.path.join(layer_results_dir, layer_name)
+                os.makedirs(per_layer_dir, exist_ok=True)
+                with open(os.path.join(per_layer_dir, "mapping.txt"), 'w') as f:
+                    f.write(str(layer_mapping))
+    
+            # Aggregate results
+            self.results.add(
+                arch, scale, rack, peConfig,
+                cycles=results[ResultKeys.CYCLES],
+                energy=results[ResultKeys.ENERGY],
+                tp=results[ResultKeys.THROUGHPUT],
+                star_hops=results[ResultKeys.STAR_HOPS],
+                ring_hops=results[ResultKeys.RING_HOPS],
+                star_hop_energy=results[ResultKeys.STAR_HOP_ENERGY],
+                ring_hop_energy=results[ResultKeys.RING_HOP_ENERGY],
+            )
+            self.results.save_to_json("total.json", config_dir)
+    
+        # Run for BASE architecture
+        for scale in GPUMemoryScale:
+            for peConfig in PEsConfig:
+                _run_config(Architecture.Base, scale, RackSize.RACK_1, peConfig)
+    
+        # Run for Data Parallel and Tensor Parallel
+        for arch in [Architecture.Data_Parallel, Architecture.Tensor_Parallel]:
+            for rack in [RackSize.RACK_4, RackSize.RACK_8, RackSize.RACK_16]:
                 for scale in GPUMemoryScale:
                     for peConfig in PEsConfig:
-                        key = (arch, scale, rack, peConfig)
+                        _run_config(arch, scale, rack, peConfig)
 
-                        config_str = f"{arch.name}, {scale.name}, {rack.name}, {peConfig.name}"
-                        config_dir = os.path.join(base_dir, config_str)
-                        layer_results_dir = os.path.join(config_dir, "Layer Results")
-                        os.makedirs(layer_results_dir, exist_ok=True)
-                        
-                        print("=" * 50)
-                        print("Starting Timeloop with configuration:")
-                        print(f"  - arch: {key[0]}")
-                        print(f"  - scale: {key[1]}")
-                        print(f"  - rack: {key[2]}")
-                        print(f"  - peConfig: {key[3]}")
-                        print("=" * 50)
-
-                        
-                        # Skip configurations already computed.
-                        if key in self.results.data:
-                            print(f"Skipping {arch.name}, {scale.name}, {rack.name}, {peConfig.value}.")
-                            continue
-
-                        architecture = WorkloadStrategy(arch, scale, peConfig.value, rack.value,  self.debug)
-                        results, layer_stats, layer_mappings = architecture.run_workload()
-                        
-                        self.__check_returned_vals(results)
-
-
-                        #add per-layer stats results into sub-dir. 
-                        for layer_name, layer_stats in layer_stats.items():
-                            per_layer_dir = os.path.join(layer_results_dir,layer_name)
-                            os.makedirs(per_layer_dir, exist_ok=True)
-                            
-                            layer_path = os.path.join(per_layer_dir, f"stats.txt")
-                            with open(layer_path, 'w') as f:
-                                f.write(str(layer_stats))
-
-                        #add per-layer stats results into sub-dir. 
-                        for layer_name, layer_mapping in layer_mappings.items():
-                            per_layer_dir = os.path.join(f"{layer_results_dir}/{layer_name}")
-                            os.makedirs(per_layer_dir, exist_ok=True)
-                            
-                            layer_path = os.path.join(per_layer_dir, f"mapping.txt")
-                            with open(layer_path, 'w') as f:
-                                f.write(str(layer_mapping))
-                    
-                        #aggregate total results
-                        self.results.add(
-                            arch,
-                            scale,
-                            rack,
-                            peConfig,
-                            cycles=results[ResultKeys.CYCLES],
-                            energy=results[ResultKeys.ENERGY],
-                            tp=results[ResultKeys.THROUGHPUT],
-                            star_hops=results[ResultKeys.STAR_HOPS],
-                            ring_hops=results[ResultKeys.RING_HOPS],
-                            star_hop_energy=results[ResultKeys.STAR_HOP_ENERGY],
-                            ring_hop_energy=results[ResultKeys.RING_HOP_ENERGY],
-                        )
-                        
-                        # Ensure we save to persistent file to skip computations in the future
-                        self.results.save_to_json("total.json", config_dir)
-
-
+    
     def run_single(self, arch, scale, rack, peConfig, base_dir=None):
         est = pytz.timezone('US/Eastern')
         if base_dir is None:

@@ -1,0 +1,29 @@
+DRAM [ Weights:147456 (147456) Inputs:7372800 (7372800) Outputs:6422528 (6422528) ] 
+inter_GPU_spatial [ ] 
+---------------------
+| for N in [0:16) (Spatial-X)
+
+global_buffer [ Weights:147456 (147456) Inputs:460800 (460800) Outputs:401408 (401408) ] 
+----------------------------------------------------------------------------------------
+|   for N in [0:4)
+|     for M in [0:64)
+|       for R in [0:3)
+|         for C in [0:2)
+|           for Q in [0:28)
+
+inter_PE_spatial [ ] 
+--------------------
+|             for M in [0:2) (Spatial-Y)
+|               for C in [0:2) (Spatial-X)
+
+scratchpad [ Weights:96 (96) ] 
+------------------------------
+|                 for P in [0:28)
+|                   for S in [0:3)
+|                     for C in [0:32)
+
+weight_reg [ Weights:1 (1) ] 
+input_activation_reg [ Inputs:1 (1) ] 
+output_activation_reg [ Outputs:1 (1) ] 
+---------------------------------------
+|                       << Compute >>

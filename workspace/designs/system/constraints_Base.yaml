@@ -1,3 +1,8 @@
+#base configuration 
+# - 1 GPU, that says run the model, with very relaxed constraints. 
+# - num_gpus GPUs, then just run the model using the resources as best, without a defined strategy. 
+#     -> num_gpus GPUs that is really 1 block for resources, and the mapper just does it how it wants. 
+
 constraints:
   version: 0.4
   targets:
@@ -5,11 +10,7 @@ constraints:
     type: dataspace
     keep: [Inputs, Outputs, Weights]
     bypass: []
-  - target: DRAM
-    type: temporal
-    factors: [R=1, S=1, P=1, Q=1, N=64]
-    permutation: [R, S, Q, P, C, M, N] 
-
+ 
   - target: GPU
     type: spatial
     factors: 
@@ -17,7 +18,7 @@ constraints:
     - Q=1
     - R=1
     - S=1
-    - N=1
+    - N <= {{num_gpus}}
     - C=1
     - M=1
     permutation: [N, M, R, S, P, Q, C]
@@ -26,11 +27,7 @@ constraints:
     type: dataspace
     keep: [Inputs, Outputs, Weights]
     bypass: []
-  - target: global_buffer
-    type: temporal
-    factors: [P=1, Q=1, R=1, S=1]
-    permutation: [S, R, Q, P, C, M, N]
-    
+ 
   - target: PE
     type: spatial
     factors: 
@@ -43,6 +40,7 @@ constraints:
     - M<={{pe_meshY}}
     permutation: [C, M, R, S, P, Q, N]
     split: 1
+    
   - target: scratchpad
     type: dataspace
     keep: [Weights]

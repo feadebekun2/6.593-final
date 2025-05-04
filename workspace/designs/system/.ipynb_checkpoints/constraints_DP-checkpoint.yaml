@@ -17,7 +17,7 @@ constraints:
     - Q=1
     - R=1
     - S=1
-    - N = {{num_gpus}}
+    - N <= {{num_gpus}}
     - C=1
     - M=1
     permutation: [N, M, R, S, P, Q, C]

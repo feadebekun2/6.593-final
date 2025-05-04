@@ -19,7 +19,7 @@ constraints:
     - S=1
     - N=1
     - C=1
-    - M = {{num_gpus}}
+    - M <= {{num_gpus}}
     permutation: [M, N, R, S, P, Q, C]
     
   - target: global_buffer

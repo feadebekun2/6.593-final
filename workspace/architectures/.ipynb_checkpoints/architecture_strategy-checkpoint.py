@@ -12,49 +12,19 @@ class WorkloadStrategy:
         self.peConfig = peConfig
        
         if self.strategy == Architecture.Base:
-            self.workload = self.__build_base_architecture()
             self.constraints = 'designs/system/constraints_Base.yaml'
         elif self.strategy == Architecture.Data_Parallel:
-            self.workload = self.__built_dp_architecture()
             self.constraints = 'designs/system/constraints_DP.yaml'
         elif self.strategy == Architecture.Tensor_Parallel:
-            self.workload = self.__build_tp_architecture()
             self.constraints = 'designs/system/constraints_TP.yaml'
         else:
             raise ValueError(f"Unsupported Architecture: {strategy}")
-
-        self.derivedMetricsEvaluator = DerivedMetricsEvaluator(strategy, gpu_architecture, num_gpus, self.workload)
-
-    def __build_base_architecture(self):
-        return list(map(lambda x: {**x, **(self.peConfig)}, base_config))
-
-    def __built_dp_architecture(self):
-        dp_configs = []
-        base_config_with_PEs = list(map(lambda x: {**x, **(self.peConfig)}, base_config))
-        for config in base_config_with_PEs:
-            dp_config = config.copy()
-            dp_config["PE_spatial_factor_N"] *= self.num_gpus
-            dp_config["global_buffer_factor_N"] *= self.num_gpus
-            dp_config["DRAM_factor_N"] = int(dp_config["DRAM_factor_N"] / (self.num_gpus ** 2))
-            dp_configs.append(dp_config)
-        return dp_configs
-
-    def __build_tp_architecture(self):
-        tp_configs = []
-        base_config_with_PEs = list(map(lambda x: {**x, **(self.peConfig)}, base_config))
-        for config in base_config_with_PEs:
-            tp_config = config.copy()
-            tp_config["PE_spatial_factor_M"] *= self.num_gpus
-            tp_config["global_buffer_factor_M"] *= self.num_gpus
-            tp_config["DRAM_factor_M"] = int(tp_config["DRAM_factor_M"] / (self.num_gpus ** 2))
-            tp_configs.append(tp_config)
-        return tp_configs
 
     def run_workload(self):
         results = {
             ResultKeys.ENERGY: [],
             ResultKeys.CYCLES: [],
-            ResultKeys.THROUGHPUT: 0,
+            ResultKeys.THROUGHPUT: 1,
             ResultKeys.STAR_HOPS: 0,
             ResultKeys.RING_HOPS: 0,
             ResultKeys.STAR_HOP_ENERGY: 0,
@@ -74,7 +44,6 @@ class WorkloadStrategy:
             if results[ResultKeys.THROUGHPUT] == -1:
                 results[ResultKeys.ENERGY].append(-1)
                 results[ResultKeys.CYCLES].append(-1)
-                results[ResultKeys.THROUGHPUT] = -1
                 continue
 
             # If debug is enabled, just add -1 to run through each config
@@ -115,18 +84,14 @@ class WorkloadStrategy:
     
                 except Exception as e:
                     print(f"Error running layer {filename}: {e}")
-                    results[ResultKeys.ENERGY].append(-1)
-                    results[ResultKeys.CYCLES].append(-1)
+                    for i in range(count):
+                        results[ResultKeys.ENERGY].append(-1)
+                        results[ResultKeys.CYCLES].append(-1)
                     results[ResultKeys.THROUGHPUT] = -1
-
-        if results[ResultKeys.THROUGHPUT] != -1:
-            results[ResultKeys.THROUGHPUT] = self.derivedMetricsEvaluator.derive_throughput(sum(results[ResultKeys.CYCLES]))
-        else:
-            results[ResultKeys.THROUGHPUT] = 0
         
         # These are independent of failures
-        star_hops, star_hop_energy = self.derivedMetricsEvaluator.derive_total_star_hops_and_energy()
-        ring_hops, ring_hop_energy = self.derivedMetricsEvaluator.derive_total_ring_hops_and_energy()
+        star_hops, star_hop_energy = 0, 0
+        ring_hops, ring_hop_energy = 0, 0
         
         results[ResultKeys.STAR_HOPS] = star_hops
         results[ResultKeys.RING_HOPS] = ring_hops

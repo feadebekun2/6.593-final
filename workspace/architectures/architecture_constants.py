@@ -23,6 +23,7 @@ class GPUMemoryScale(Enum):
         }[self.name]
 
 class RackSize(Enum):
+    RACK_1 = 1
     RACK_4 = 4
     RACK_8 = 8
     RACK_16 = 16

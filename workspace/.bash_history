@@ -40,3 +40,7 @@ timeloop model ./output_dir/parsed-processed-input.yaml
 timeloop model ./output_dir/parsed-processed-input.yaml
 timeloop model ./output_dir/parsed-processed-input.yaml
 timeloop model ./output_dir/parsed-processed-input.yaml
+timeloop model ./output_dir/parsed-processed-input.yaml
+timeloop model ./output_dir/parsed-processed-input.yaml
+tl mapper ./output_dir/parsed-processed-input.yaml
+tl mapper ./output_dir/parsed-processed-input.yaml
