@@ -9,7 +9,9 @@ FREQUENCY = 1e9 # TODO: Find a better value (rn using 1GHz)
 
 # From Timeloop output for DRAM
 # Energy (per-scalar-access)               : 128.00 pJ
-ENERGY_PER_HOP = 128 #* 1e-6
+HOP_ENERGY_PER_BYTE = (128 * 1e-6) / 2 #pj to uJ
+#DRAM is 128 pj / 16 bits, which its 64 pj / 1 byte, convert to microjoules. 
+
 NV_LINK_BANDWIDTH = 2.5e+10 #25 GB/s
 BISECTION_BANDWIDTH = 1e+10 #Constant at 10 GB/s or 1e10 B/s
 CYCLES_PER_HOP = 80
@@ -54,9 +56,8 @@ class DerivedMetricsEvaluator:
                         #parse stats. 
                         
                         lines = stats.split('\n')
-                        energy = float([l for l in lines if 'Energy:' in l][0].split(' ', 2)[1])
-                        cycles = int([l for l in lines if 'Cycles:' in l][0].split(' ', 1)[1])
-
+                        energy = float([l for l in lines if 'Energy:' in l][0].split(' ', 2)[1]) * resnet_18_layers[folder_name]
+                        cycles = int([l for l in lines if 'Cycles:' in l][0].split(' ', 1)[1]) * resnet_18_layers[folder_name]
                         total_cycles += cycles
                         total_energy += energy
 
@@ -263,7 +264,7 @@ class DerivedMetricsEvaluator:
                 'total_network_bytes': sum(total_bytes['total_network_bytes']),
                 'total_network_hops': total_network_hops, 
                 'total_network_latency': network_latency, 
-                'total_network_energy': total_network_hops * ENERGY_PER_HOP,
+                'total_network_energy': total_network_hops * (HOP_ENERGY_PER_BYTE) * max_data_per_comm_event,
                 'total_onchip_bytes': sum(total_bytes['total_onchip_bytes']),
                 'total_onchip_latency': on_chip_latency, 
                 'total_onchip_energy': on_chip_results['total_energy'],
@@ -344,7 +345,7 @@ class DerivedMetricsEvaluator:
                 'total_network_bytes': sum(total_bytes['total_network_bytes']),
                 'total_network_hops': total_network_hops, 
                 'total_network_latency': network_latency, 
-                'total_network_energy': total_network_hops * ENERGY_PER_HOP,
+                'total_network_energy': total_network_hops * HOP_ENERGY_PER_BYTE *max_data_per_comm_event,
                 'total_onchip_bytes': sum(total_bytes['total_onchip_bytes']),
                 'total_onchip_latency': on_chip_latency, 
                 'total_onchip_energy': on_chip_results['total_energy'],
