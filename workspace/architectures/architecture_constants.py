@@ -22,6 +22,15 @@ class GPUMemoryScale(Enum):
             "MEMORY_1024MB": "1024MB",
         }[self.name]
 
+    @property
+    def size_in_mb(self) -> int:
+        return {
+            "MEMORY_4MB": 4,
+            "MEMORY_16MB": 16,
+            "MEMORY_64MB": 64,
+            "MEMORY_1024MB": 1024,
+        }[self.name]
+
 class RackSize(Enum):
     RACK_1 = 1
     RACK_4 = 4
