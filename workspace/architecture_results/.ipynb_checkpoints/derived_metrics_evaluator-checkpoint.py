@@ -251,17 +251,23 @@ class DerivedMetricsEvaluator:
         # return (total_network_sends, total_network_sends * ENERGY_PER_HOP, total_comms['total_onchip_bytes'] / on_chip_bandwidth)
 
         on_chip_results = self.get_onchip_results()
+
+        on_chip_latency = on_chip_results['total_cycles']
+        network_latency = total_network_hops * CYCLES_PER_HOP
+        
+        bottlenecked_latency = max(on_chip_latency, network_latency)
         
         return {
                 'per_layer_network_bytes': total_bytes['total_network_bytes'],
                 'per_layer_onchip_bytes': total_bytes['total_onchip_bytes'],
                 'total_network_bytes': sum(total_bytes['total_network_bytes']),
                 'total_network_hops': total_network_hops, 
-                'total_network_latency': total_network_hops * CYCLES_PER_HOP, 
+                'total_network_latency': network_latency, 
                 'total_network_energy': total_network_hops * ENERGY_PER_HOP,
                 'total_onchip_bytes': sum(total_bytes['total_onchip_bytes']),
-                'total_onchip_latency': on_chip_results['total_cycles'], 
-                'total_onchip_energy': on_chip_results['total_energy']
+                'total_onchip_latency': on_chip_latency, 
+                'total_onchip_energy': on_chip_results['total_energy'],
+                'bottlenecked_latency': bottlenecked_latency
        }
         # Roofline model is saying:
         # If total_network_sends * cycles per network send > on chip sends * cycles per on chip send, then we are network bound
@@ -324,18 +330,26 @@ class DerivedMetricsEvaluator:
         # (total times this strategy sends data on the network, energy used for network sends, on chip data movement)
         on_chip_bytes = total_bytes['total_onchip_bytes']
         # return (total_network_sends, total_network_sends * ENERGY_PER_HOP, total_comms['total_onchip_bytes'] / on_chip_bandwidth)
-
+       
         on_chip_results = self.get_onchip_results()
+
+        on_chip_latency = on_chip_results['total_cycles']
+        network_latency = total_network_hops * CYCLES_PER_HOP
+        
+        bottlenecked_latency = max(on_chip_latency, network_latency)
         
         return {
                 'per_layer_network_bytes': total_bytes['total_network_bytes'],
                 'per_layer_onchip_bytes': total_bytes['total_onchip_bytes'],
                 'total_network_bytes': sum(total_bytes['total_network_bytes']),
                 'total_network_hops': total_network_hops, 
-                'total_network_latency': total_network_hops * CYCLES_PER_HOP, 
+                'total_network_latency': network_latency, 
                 'total_network_energy': total_network_hops * ENERGY_PER_HOP,
                 'total_onchip_bytes': sum(total_bytes['total_onchip_bytes']),
-                'total_onchip_latency': on_chip_results['total_cycles'], 
-                'total_onchip_energy': on_chip_results['total_energy']
+                'total_onchip_latency': on_chip_latency, 
+                'total_onchip_energy': on_chip_results['total_energy'],
+                'bottlenecked_latency': bottlenecked_latency
        }
+
+        
 
