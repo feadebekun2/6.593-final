@@ -3,13 +3,15 @@ from loaders import *
 from enum import Enum
 import os
 import re
+import math
+
 FREQUENCY = 1e9 # TODO: Find a better value (rn using 1GHz)
 
 # From Timeloop output for DRAM
 # Energy (per-scalar-access)               : 128.00 pJ
 ENERGY_PER_HOP = 128 * 1e-6
 NV_LINK_BANDWIDTH = 2.5e+10 #25 GB/s
-BISECTION_BANDWIDTH = 1e+10 #Constant at 10 GB/s
+BISECTION_BANDWIDTH = 1e+10 #Constant at 10 GB/s or 1e10 B/s
 CYCLES_PER_HOP = 80
 
 # conv2_stats = open('./output_dir/timeloop-model.stats.txt', 'r').read()
@@ -119,7 +121,7 @@ class DerivedMetricsEvaluator:
 
         layer_dir = os.path.join(self.config_dir, "Layer Results")
         
-        returned = {'total_network_bytes': 0, 'total_onchip_bytes': 0}
+        returned = {'total_network_bytes': [], 'total_onchip_bytes': []}
 
         folders = os.listdir(layer_dir)
 
@@ -141,7 +143,7 @@ class DerivedMetricsEvaluator:
             folder_path = os.path.join(layer_dir, folder_name)
             
             if os.path.isdir(folder_path):
-                print(f"Found folder: {folder_name}")
+                # print(f"Found folder: {folder_name}")
                 # You can process the folder here
 
                 #get stats
@@ -155,24 +157,24 @@ class DerivedMetricsEvaluator:
 
                         #for base, all on chip. 
                         if self.strategy == Architecture.Base:
-                            returned['total_onchip_bytes'] += layer_result['total_bytes']
-                            returned['total_network_bytes'] = 0
+                            returned['total_onchip_bytes'].append(layer_result['total_bytes'])
+                            returned['total_network_bytes'].append(0)
                                 
                         elif self.strategy == Architecture.Data_Parallel:
                             if idx == 0:
-                                returned['total_network_bytes'] += layer_result['total_DRAM_bytes']
-                                returned['total_onchip_bytes'] += layer_result['total_onchip_bytes']
+                                returned['total_network_bytes'].append(layer_result['total_DRAM_bytes'])
+                                returned['total_onchip_bytes'].append(layer_result['total_onchip_bytes'])
                             
                             elif idx == len(folders_to_iterate)-1:
-                                returned['total_onchip_bytes'] += layer_result['total_onchip_bytes']
+                                returned['total_onchip_bytes'].append(layer_result['total_onchip_bytes'])
                                 # last layer has M=512, P,Q = 7 and each number is 16 bits / a byte
-                                returned['total_network_bytes'] += 512 * 7 * 7 * (16 / 8)
+                                returned['total_network_bytes'].append(512 * 7 * 7 * (16 / 8))
                             else:
-                                returned['total_network_bytes'] += 0
-                                returned['total_onchip_bytes'] += layer_result['total_onchip_bytes']
+                                returned['total_network_bytes'].append(0)
+                                returned['total_onchip_bytes'].append(layer_result['total_onchip_bytes'])
                         elif self.strategy == Architecture.Tensor_Parallel:
-                             returned['total_network_bytes'] += layer_result['total_DRAM_bytes']
-                             returned['total_onchip_bytes'] += layer_result['total_onchip_bytes']
+                             returned['total_network_bytes'].append(layer_result['total_DRAM_bytes'])
+                             returned['total_onchip_bytes'].append(layer_result['total_onchip_bytes'])
                         else:
                             raise Exception('unknown arch')
                     
@@ -222,12 +224,23 @@ class DerivedMetricsEvaluator:
         #{'total_network_bytes': 0, 'total_onchip_bytes': 0}
         total_bytes = self.get_total_data_movement()
         
-        # total data movement is the amount of data movement need scaled by the number of hops
         avg_hops_per_comm = 2
 
-        total_network_comms = total_bytes['total_network_bytes'] / self.derive_link_bandwidth(NetworkArch.STAR)
+        total_sends = 0
         
-        total_network_hops = total_network_comms * avg_hops_per_comm
+        #a communication event has maximum data content depending on link bandwidth, and cycles per communication (which is fixed). 
+        link_bandwidth_in_cycles = self.derive_link_bandwidth(NetworkArch.STAR) / FREQUENCY
+        
+        max_data_per_comm_event = link_bandwidth_in_cycles * CYCLES_PER_HOP
+        #per layer, calculate total sends. 
+        total_network_bytes_array = total_bytes['total_network_bytes']
+       
+        for layer_num_bytes in total_network_bytes_array:
+            bytes_per_gpu = layer_num_bytes / self.num_gpus.value
+            sends = math.ceil(bytes_per_gpu/max_data_per_comm_event)
+            total_sends += sends
+        
+        total_network_hops = total_sends * avg_hops_per_comm
 
         
         # now divide the total data moved, scaled by hops, by the bandwidth that can be delivered for send
@@ -240,11 +253,13 @@ class DerivedMetricsEvaluator:
         on_chip_results = self.get_onchip_results()
         
         return {
-                'total_network_bytes': total_bytes['total_network_bytes'],
+                'per_layer_network_bytes': total_bytes['total_network_bytes'],
+                'per_layer_onchip_bytes': total_bytes['total_onchip_bytes'],
+                'total_network_bytes': sum(total_bytes['total_network_bytes']),
                 'total_network_hops': total_network_hops, 
                 'total_network_latency': total_network_hops * CYCLES_PER_HOP, 
                 'total_network_energy': total_network_hops * ENERGY_PER_HOP,
-                'total_onchip_bytes': total_bytes['total_onchip_bytes'],
+                'total_onchip_bytes': sum(total_bytes['total_onchip_bytes']),
                 'total_onchip_latency': on_chip_results['total_cycles'], 
                 'total_onchip_energy': on_chip_results['total_energy']
        }
@@ -287,10 +302,21 @@ class DerivedMetricsEvaluator:
         if self.num_gpus.value == 16:
             avg_hops_per_comm = 64/15
 
-        total_network_comms = total_bytes['total_network_bytes'] / self.derive_link_bandwidth(NetworkArch.RING)
+        total_sends = 0
         
-        total_network_hops = total_network_comms * avg_hops_per_comm
-
+        #a communication event has maximum data content depending on link bandwidth, and cycles per communication (which is fixed). 
+        link_bandwidth_in_cycles = self.derive_link_bandwidth(NetworkArch.RING) / FREQUENCY
+        
+        max_data_per_comm_event = link_bandwidth_in_cycles * CYCLES_PER_HOP
+        #per layer, calculate total sends. 
+        total_network_bytes_array = total_bytes['total_network_bytes']
+       
+        for layer_num_bytes in total_network_bytes_array:
+            bytes_per_gpu = layer_num_bytes / self.num_gpus.value
+            sends = math.ceil(bytes_per_gpu/max_data_per_comm_event)
+            total_sends += sends
+        
+        total_network_hops = total_sends * avg_hops_per_comm
         
         # now divide the total data moved, scaled by hops, by the bandwidth that can be delivered for send
        
@@ -302,11 +328,13 @@ class DerivedMetricsEvaluator:
         on_chip_results = self.get_onchip_results()
         
         return {
-                'total_network_bytes': total_bytes['total_network_bytes'],
+                'per_layer_network_bytes': total_bytes['total_network_bytes'],
+                'per_layer_onchip_bytes': total_bytes['total_onchip_bytes'],
+                'total_network_bytes': sum(total_bytes['total_network_bytes']),
                 'total_network_hops': total_network_hops, 
                 'total_network_latency': total_network_hops * CYCLES_PER_HOP, 
                 'total_network_energy': total_network_hops * ENERGY_PER_HOP,
-                'total_onchip_bytes': total_bytes['total_onchip_bytes'],
+                'total_onchip_bytes': sum(total_bytes['total_onchip_bytes']),
                 'total_onchip_latency': on_chip_results['total_cycles'], 
                 'total_onchip_energy': on_chip_results['total_energy']
        }
