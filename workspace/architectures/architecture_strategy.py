@@ -98,6 +98,16 @@ class WorkloadStrategy:
         results[ResultKeys.STAR_HOP_ENERGY] = star_hop_energy
         results[ResultKeys.RING_HOP_ENERGY] = ring_hop_energy
 
+        # if an error occurred, pad the results to be of correct length
+        for key in (ResultKeys.ENERGY, ResultKeys.CYCLES):
+            arr = results[key]
+            if -1 in arr:
+                # calculate how many -1 we need to add
+                deficit = 33 - len(arr)
+                if deficit > 0:
+                    arr.extend([-1] * deficit)
+        print(results)
+
         return results, layer_stats, layer_mappings
         
 

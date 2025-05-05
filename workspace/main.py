@@ -96,13 +96,13 @@ class TimeLoopExperimentController:
             self.results.save_to_json("total.json", config_dir)
     
         # Run for BASE architecture
-        for scale in GPUMemoryScale:
-            for peConfig in PEsConfig:
-                _run_config(Architecture.Base, scale, RackSize.RACK_1, peConfig)
+        # for scale in GPUMemoryScale:
+        #     for peConfig in PEsConfig:
+        #         _run_config(Architecture.Base, scale, RackSize.RACK_1, peConfig)
     
         # Run for Data Parallel and Tensor Parallel
-        for arch in [Architecture.Data_Parallel, Architecture.Tensor_Parallel]:
-            for rack in [RackSize.RACK_4, RackSize.RACK_8, RackSize.RACK_16]:
+        for arch in [Architecture.Tensor_Parallel]:
+            for rack in [RackSize.RACK_4, RackSize.RACK_8]:
                 for scale in GPUMemoryScale:
                     for peConfig in PEsConfig:
                         _run_config(arch, scale, rack, peConfig)
