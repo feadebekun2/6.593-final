@@ -9,7 +9,7 @@ FREQUENCY = 1e9 # TODO: Find a better value (rn using 1GHz)
 
 # From Timeloop output for DRAM
 # Energy (per-scalar-access)               : 128.00 pJ
-ENERGY_PER_HOP = 128 * 1e-6
+ENERGY_PER_HOP = 128 #* 1e-6
 NV_LINK_BANDWIDTH = 2.5e+10 #25 GB/s
 BISECTION_BANDWIDTH = 1e+10 #Constant at 10 GB/s or 1e10 B/s
 CYCLES_PER_HOP = 80
