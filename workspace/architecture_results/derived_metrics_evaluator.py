@@ -42,7 +42,7 @@ class DerivedMetricsEvaluator:
             folder_path = os.path.join(layer_dir, folder_name)
             
             if os.path.isdir(folder_path):
-                print(f"Found folder: {folder_name}")
+                # print(f"Found folder: {folder_name}")
                 # You can process the folder here
 
                 #get stats
