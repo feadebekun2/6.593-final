@@ -3,12 +3,12 @@ ERT:
     tables:
       - name: system_arch_top_level.DRAM[1..1]
         actions:
-          - name: update
+          - name: write
             arguments:
                 global_cycle_seconds: 1e-09
                 action_latency_cycles: 1
             energy: 512.0
-          - name: write
+          - name: update
             arguments:
                 global_cycle_seconds: 1e-09
                 action_latency_cycles: 1
@@ -23,29 +23,29 @@ ERT:
                 global_cycle_seconds: 1e-09
                 action_latency_cycles: 1
             energy: 0.0
-      - name: system_arch_top_level.global_buffer[1..8]
+      - name: system_arch_top_level.global_buffer[1..16]
         actions:
-          - name: update
-            arguments:
-                global_cycle_seconds: 1e-09
-                action_latency_cycles: 1
-            energy: 6088.31
           - name: write
             arguments:
                 global_cycle_seconds: 1e-09
                 action_latency_cycles: 1
-            energy: 6088.31
+            energy: 562.791
+          - name: update
+            arguments:
+                global_cycle_seconds: 1e-09
+                action_latency_cycles: 1
+            energy: 562.791
           - name: read
             arguments:
                 global_cycle_seconds: 1e-09
                 action_latency_cycles: 1
-            energy: 6184.8
+            energy: 588.096
           - name: leak
             arguments:
                 global_cycle_seconds: 1e-09
                 action_latency_cycles: 1
-            energy: 25.3002
-      - name: system_arch_top_level.scratchpad[1..128]
+            energy: 0.397729
+      - name: system_arch_top_level.scratchpad[1..64]
         actions:
           - name: read
             arguments: {}
@@ -59,7 +59,7 @@ ERT:
           - name: leak
             arguments: {}
             energy: 0.0007728
-      - name: system_arch_top_level.weight_reg[1..128]
+      - name: system_arch_top_level.weight_reg[1..64]
         actions:
           - name: read
             arguments: {}
@@ -73,7 +73,7 @@ ERT:
           - name: leak
             arguments: {}
             energy: 0.00112
-      - name: system_arch_top_level.input_activation_reg[1..128]
+      - name: system_arch_top_level.input_activation_reg[1..64]
         actions:
           - name: read
             arguments: {}
@@ -87,7 +87,7 @@ ERT:
           - name: leak
             arguments: {}
             energy: 0.00112
-      - name: system_arch_top_level.output_activation_reg[1..128]
+      - name: system_arch_top_level.output_activation_reg[1..64]
         actions:
           - name: read
             arguments: {}
@@ -101,7 +101,7 @@ ERT:
           - name: leak
             arguments: {}
             energy: 0.00112
-      - name: system_arch_top_level.mac[1..128]
+      - name: system_arch_top_level.mac[1..64]
         actions:
           - name: compute
             arguments: {}

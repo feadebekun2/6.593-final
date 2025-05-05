@@ -101,10 +101,10 @@ class TimeLoopExperimentController:
         #         _run_config(Architecture.Base, scale, RackSize.RACK_1, peConfig)
     
         # Run for Data Parallel and Tensor Parallel
-        for arch in [Architecture.Tensor_Parallel]:
-            for rack in [RackSize.RACK_4, RackSize.RACK_8]:
-                for scale in GPUMemoryScale:
-                    for peConfig in PEsConfig:
+        for arch in [Architecture.Tensor_Parallel, Architecture.Data_Parallel]:
+            for rack in [RackSize.RACK_16]:
+                for scale in [GPUMemoryScale.MEMORY_16MB]:
+                    for peConfig in [PEsConfig.PE_4]:
                         _run_config(arch, scale, rack, peConfig)
 
     

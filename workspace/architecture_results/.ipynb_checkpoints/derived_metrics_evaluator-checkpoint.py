@@ -291,7 +291,7 @@ class DerivedMetricsEvaluator:
     """
     def derive_total_ring_results(self):
         total_bytes = self.get_total_data_movement()
-        
+        print("seeing num_gpus: ", self.num_gpus.value)
         avg_hops_per_comm = 0
         if self.num_gpus.value == 2:
             avg_hops_per_comm = 1
