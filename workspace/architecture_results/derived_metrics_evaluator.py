@@ -169,7 +169,8 @@ class DerivedMetricsEvaluator:
                             elif idx == len(folders_to_iterate)-1:
                                 returned['total_onchip_bytes'].append(layer_result['total_onchip_bytes'])
                                 # last layer has M=512, P,Q = 7 and each number is 16 bits / a byte
-                                returned['total_network_bytes'].append(512 * 7 * 7 * (16 / 8))
+                                # 64 total images, split among num_gpus GPUs. 
+                                returned['total_network_bytes'].append(512 * 7 * 7 * (16 / 8) *64)
                             else:
                                 returned['total_network_bytes'].append(0)
                                 returned['total_onchip_bytes'].append(layer_result['total_onchip_bytes'])
@@ -227,21 +228,34 @@ class DerivedMetricsEvaluator:
         
         avg_hops_per_comm = 2
 
-        total_sends = 0
-        
-        #a communication event has maximum data content depending on link bandwidth, and cycles per communication (which is fixed). 
         link_bandwidth_in_cycles = self.derive_link_bandwidth(NetworkArch.STAR) / FREQUENCY
         
-        max_data_per_comm_event = link_bandwidth_in_cycles * CYCLES_PER_HOP
-        #per layer, calculate total sends. 
+        #per layer, calculate total hops. 
         total_network_bytes_array = total_bytes['total_network_bytes']
        
-        for layer_num_bytes in total_network_bytes_array:
-            bytes_per_gpu = layer_num_bytes / self.num_gpus.value
-            sends = math.ceil(bytes_per_gpu/max_data_per_comm_event)
-            total_sends += sends
+        # for layer_num_bytes in total_network_bytes_array:
+        #     bytes_per_gpu = layer_num_bytes / self.num_gpus.value
+        #     sends = math.ceil(bytes_per_gpu/max_data_per_comm_event)
+        #     total_sends += sends
         
-        total_network_hops = total_sends * avg_hops_per_comm
+        # total_network_hops = total_sends * avg_hops_per_comm
+        total_network_hops = 0
+        total_network_energy = 0
+        network_latency = 0
+        
+        for layer_num_bytes in total_network_bytes_array:
+            bytes_per_gpu = layer_num_bytes / self.num_gpus.value * (self.num_gpus.value - 1)
+            
+            # For energy: sum total byte-hop movements
+            #this is total hops per 
+            total_hops_for_layer = layer_num_bytes * avg_hops_per_comm
+            total_network_hops += total_hops_for_layer
+            total_network_energy += total_hops_for_layer * HOP_ENERGY_PER_BYTE
+        
+            # For latency: how long does it take for 1 GPU to send its bytes?
+            comm_cycles = bytes_per_gpu / link_bandwidth_in_cycles
+            per_gpu_latency = comm_cycles + avg_hops_per_comm * CYCLES_PER_HOP
+            network_latency += per_gpu_latency
 
         
         # now divide the total data moved, scaled by hops, by the bandwidth that can be delivered for send
@@ -254,7 +268,7 @@ class DerivedMetricsEvaluator:
         on_chip_results = self.get_onchip_results()
 
         on_chip_latency = on_chip_results['total_cycles']
-        network_latency = total_network_hops * CYCLES_PER_HOP
+        
         
         bottlenecked_latency = max(on_chip_latency, network_latency)
         
@@ -264,7 +278,7 @@ class DerivedMetricsEvaluator:
                 'total_network_bytes': sum(total_bytes['total_network_bytes']),
                 'total_network_hops': total_network_hops, 
                 'total_network_latency': network_latency, 
-                'total_network_energy': total_network_hops * (HOP_ENERGY_PER_BYTE) * max_data_per_comm_event,
+                'total_network_energy': total_network_energy,
                 'total_onchip_bytes': sum(total_bytes['total_onchip_bytes']),
                 'total_onchip_latency': on_chip_latency, 
                 'total_onchip_energy': on_chip_results['total_energy'],
@@ -309,21 +323,49 @@ class DerivedMetricsEvaluator:
         if self.num_gpus.value == 16:
             avg_hops_per_comm = 64/15
 
-        total_sends = 0
-        
-        #a communication event has maximum data content depending on link bandwidth, and cycles per communication (which is fixed). 
         link_bandwidth_in_cycles = self.derive_link_bandwidth(NetworkArch.RING) / FREQUENCY
         
-        max_data_per_comm_event = link_bandwidth_in_cycles * CYCLES_PER_HOP
-        #per layer, calculate total sends. 
+        #per layer, calculate total hops. 
         total_network_bytes_array = total_bytes['total_network_bytes']
        
-        for layer_num_bytes in total_network_bytes_array:
-            bytes_per_gpu = layer_num_bytes / self.num_gpus.value
-            sends = math.ceil(bytes_per_gpu/max_data_per_comm_event)
-            total_sends += sends
+        # for layer_num_bytes in total_network_bytes_array:
+        #     bytes_per_gpu = layer_num_bytes / self.num_gpus.value
+        #     sends = math.ceil(bytes_per_gpu/max_data_per_comm_event)
+        #     total_sends += sends
         
-        total_network_hops = total_sends * avg_hops_per_comm
+        # total_network_hops = total_sends * avg_hops_per_comm
+        # total_network_hops = 0
+        # total_network_energy = 0
+        # for layer_num_bytes in total_network_bytes_array:
+        #     bytes_per_gpu = layer_num_bytes / self.num_gpus.value
+        #     #cycles to send those bytes. 
+        #     comm_cycles = bytes_per_gpu / link_bandwidth_in_cycles #in cycles
+
+        #     #total network hops for this layer
+        #     network_hops = comm_cycles * avg_hops_per_comm #in hops. 
+
+        #     total_network_energy += bytes_per_gpu *(HOP_ENERGY_PER_BYTE) * network_hops
+        #     total_network_hops += network_hops
+
+
+        total_network_hops = 0
+        total_network_energy = 0
+        network_latency = 0
+        
+        for layer_num_bytes in total_network_bytes_array:
+            bytes_per_gpu = (layer_num_bytes / self.num_gpus.value) * (self.num_gpus.value - 1)
+            
+            # For energy: sum total byte-hop movements
+
+            #
+            total_hops_for_layer = layer_num_bytes * avg_hops_per_comm
+            total_network_hops += total_hops_for_layer
+            total_network_energy += total_hops_for_layer * HOP_ENERGY_PER_BYTE
+        
+            # For latency: how long does it take for 1 GPU to send its bytes?
+            comm_cycles = bytes_per_gpu / link_bandwidth_in_cycles
+            per_gpu_latency = comm_cycles + avg_hops_per_comm * CYCLES_PER_HOP
+            network_latency += per_gpu_latency
         
         # now divide the total data moved, scaled by hops, by the bandwidth that can be delivered for send
        
@@ -331,11 +373,11 @@ class DerivedMetricsEvaluator:
         # (total times this strategy sends data on the network, energy used for network sends, on chip data movement)
         on_chip_bytes = total_bytes['total_onchip_bytes']
         # return (total_network_sends, total_network_sends * ENERGY_PER_HOP, total_comms['total_onchip_bytes'] / on_chip_bandwidth)
-       
+
         on_chip_results = self.get_onchip_results()
 
         on_chip_latency = on_chip_results['total_cycles']
-        network_latency = total_network_hops * CYCLES_PER_HOP
+        # network_latency = total_network_hops * CYCLES_PER_HOP
         
         bottlenecked_latency = max(on_chip_latency, network_latency)
         
@@ -345,7 +387,7 @@ class DerivedMetricsEvaluator:
                 'total_network_bytes': sum(total_bytes['total_network_bytes']),
                 'total_network_hops': total_network_hops, 
                 'total_network_latency': network_latency, 
-                'total_network_energy': total_network_hops * HOP_ENERGY_PER_BYTE *max_data_per_comm_event,
+                'total_network_energy': total_network_energy,
                 'total_onchip_bytes': sum(total_bytes['total_onchip_bytes']),
                 'total_onchip_latency': on_chip_latency, 
                 'total_onchip_energy': on_chip_results['total_energy'],
